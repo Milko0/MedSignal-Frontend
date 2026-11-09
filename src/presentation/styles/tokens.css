@@ -1,0 +1,12 @@
+:root {
+  /* Palette from the mock-ups: teal actions, amber shortage, coral safety signals, green available */
+  --teal: #1b7c8c;       --teal-soft: #e1f0f2;
+  --amber: #b7791f;      --amber-soft: #fbf0dc;
+  --coral: #c0453a;      --coral-soft: #fbe9e6;
+  --green: #2f855a;      --green-soft: #e3f3ea;
+  --slate: #5b6b73;      --slate-soft: #eceff1;
+  --ink: #17323b;        --muted: #5f747c;
+  --bg: #f3f7f8;         --card: #ffffff;   --line: #dbe5e8;
+  --radius: 10px;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
