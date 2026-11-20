@@ -195,3 +195,74 @@ describe('SignalsView: the URL is the source of truth', () => {
     expect(w.find('.disclaimer').text()).toBe('Custom disclaimer.')
   })
 })
+
+describe('SignalsView: the table', () => {
+  it('shows a row per signal with its PRR, label state and pager', async () => {
+    const w = await open('/signals')
+
+    expect(w.findAll('tbody tr')).toHaveLength(1)
+    expect(w.find('tbody tr').text()).toContain('ibuprofen')
+    expect(w.find('tbody tr').text()).toContain('4.9')
+    expect(w.find('.pager').text()).toContain('Page 2 of 5')
+  })
+
+  it('goes to the next page through the URL and asks the backend for it', async () => {
+    const w = await open('/signals?page=2')
+
+    await w.findAll('.pager button')[1].trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ page: '3' })
+    expect(lastList().page).toBe(3)
+  })
+
+  it('keeps the other filters when the page changes', async () => {
+    const w = await open('/signals?rxcui=5640&drug=IBUPROFEN&reaction=nausea&page=2')
+
+    await w.findAll('.pager button')[0].trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ rxcui: '5640', drug: 'IBUPROFEN', reaction: 'nausea' })
+  })
+
+  it('shows a loading line before the first answer and the rows after', async () => {
+    services.signal.list.mockReturnValue(new Promise(() => {}))
+    const w = await open('/signals')
+
+    expect(w.find('[role="status"]').text()).toBe('Loading…')
+    expect(w.find('table').exists()).toBe(false)
+  })
+
+  it('shows an error with Retry that loads again', async () => {
+    services.signal.list.mockRejectedValueOnce(Object.assign(new Error('boom'), { status: 500 }))
+    const w = await open('/signals')
+    expect(w.find('[role="alert"]').text()).toContain('Could not load signals.')
+
+    await w.find('[role="alert"] button').trigger('click')
+    await flushPromises()
+
+    expect(services.signal.list).toHaveBeenCalledTimes(2)
+    expect(w.find('[role="alert"]').exists()).toBe(false)
+    expect(w.findAll('tbody tr')).toHaveLength(1)
+  })
+
+  it('says why nothing matches, naming the quarter and the minimum', async () => {
+    services.signal.list.mockResolvedValue(list({ items: [], total: 0, total_pages: 0 }))
+    const w = await open('/signals')
+
+    expect(w.find('.results').text()).toBe('No signals in 2026Q3 with at least 20 reports. Try a lower minimum or "Show all pairs".')
+    expect(w.find('table').exists()).toBe(false)
+  })
+
+  it('offers page 1 when the URL asks for a page past the end', async () => {
+    services.signal.list.mockResolvedValue(list({ items: [], total: 41, page: 99, total_pages: 5 }))
+    const w = await open('/signals?page=99')
+    expect(w.find('.results').text()).toContain('Page 99 is past the last page (5)')
+
+    await w.find('.results button').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({})
+  })
+})
+

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  defaultFilters, defaultMinReports, effectiveMinReports, filterApplies, filtersFromQuery, queryFromFilters,
+  defaultFilters, defaultMinReports, describeEmpty, effectiveMinReports, filterApplies, filtersFromQuery, queryFromFilters,
 } from '@/domain/rules/signalFilters'
 
 describe('filtersFromQuery', () => {
@@ -134,5 +134,29 @@ describe('tab rules', () => {
     expect(filterApplies('gaps', 'drug')).toBe(true)
     expect(filterApplies('gaps', 'quarter')).toBe(false)
     expect(filterApplies('gaps', 'reaction')).toBe(false)
+  })
+})
+
+describe('describeEmpty', () => {
+  it('names the quarter and the minimum and suggests a lower minimum and all pairs', () => {
+    expect(describeEmpty(defaultFilters(), '2026Q3'))
+      .toBe('No signals in 2026Q3 with at least 20 reports. Try a lower minimum or "Show all pairs".')
+  })
+
+  it('mentions the filters when a drug or reaction narrows the list', () => {
+    const f = { ...defaultFilters(), rxcui: '5640', minReports: 5 }
+
+    expect(describeEmpty(f, '2026Q3')).toBe('No signals in 2026Q3 matching your filters with at least 5 reports. Try a lower minimum or fewer filters or "Show all pairs".')
+  })
+
+  it('does not suggest "Show all pairs" when it is already on, nor a lower minimum at the lowest', () => {
+    const f = { ...defaultFilters(), onlySignals: false, minReports: 3 }
+
+    expect(describeEmpty(f, '2026Q3')).toBe('No signals in 2026Q3 with at least 3 reports.')
+  })
+
+  it('talks about emerging signals on the Emerging tab, with its default minimum of 3', () => {
+    expect(describeEmpty({ ...defaultFilters(), tab: 'emerging' }, '2026Q3')).toBe('No emerging signals in 2026Q3 with at least 3 reports.')
+    expect(describeEmpty({ ...defaultFilters(), tab: 'emerging', minReports: 10 }, null)).toBe('No emerging signals with at least 10 reports. Try a lower minimum.')
   })
 })

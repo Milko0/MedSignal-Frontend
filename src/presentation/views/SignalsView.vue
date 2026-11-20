@@ -2,13 +2,14 @@
 // View 4 - Signals and statistics (FR-04 to FR-09). The URL holds the tab, filters and page; this view reads
 // route.query into the store and writes every change back with router.push, so links (also from the dashboard),
 // reload and back/forward restore the same view. Charts below still use SAMPLE data until the statistics commit.
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSignalStore } from '@/application/stores/useSignalStore'
-import { defaultFilters, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
+import { defaultFilters, describeEmpty, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
 import { formatPercent } from '@/domain/rules/percent'
 import FilterBar from '@/presentation/components/signals/FilterBar.vue'
 import SignalTabs from '@/presentation/components/signals/SignalTabs.vue'
+import SignalTable from '@/presentation/components/signals/SignalTable.vue'
 import AgeBarChart from '@/presentation/components/charts/AgeBarChart.vue'
 import DonutChart from '@/presentation/components/charts/DonutChart.vue'
 import TrendChart from '@/presentation/components/charts/TrendChart.vue'
@@ -41,6 +42,10 @@ function go(filters) {
 const setTab = (tab) => go({ ...signals.filters, tab, page: 1 })
 const apply = () => go({ ...draft.value, page: 1 })
 const reset = () => go({ ...defaultFilters(), tab: signals.filters.tab })
+const goToPage = (page) => go({ ...signals.filters, page })
+
+const emptyMessage = computed(() => describeEmpty(signals.filters, signals.usedQuarter))
+const isList = computed(() => signals.filters.tab !== 'gaps')
 
 const age = { '0-17': 8000, '18-44': 21000, '45-64': 30000, '65-74': 23500, '75+': 18500 }
 const sex = { Female: 58, Male: 39, Unknown: 3 }
@@ -64,6 +69,30 @@ const serious = [
     <span v-if="signals.matchCoverage > 0"> · based on {{ formatPercent(signals.matchCoverage) }} of reports matched to an ingredient</span>
   </p>
 
+  <section v-if="isList" class="card results" aria-label="Signals">
+    <p v-if="signals.tableError" class="error" role="alert">
+      Could not load signals.
+      <button type="button" class="link" @click="signals.loadTable()">Retry</button>
+    </p>
+    <p v-else-if="signals.tableLoading && !signals.list" class="muted" role="status">Loading…</p>
+    <template v-else-if="signals.list">
+      <p v-if="signals.list.total === 0" class="muted">{{ emptyMessage }}</p>
+      <p v-else-if="signals.list.items.length === 0" class="muted">
+        Page {{ signals.filters.page }} is past the last page ({{ signals.list.totalPages }}).
+        <button type="button" class="link" @click="goToPage(1)">Go to page 1</button>
+      </p>
+      <SignalTable
+        v-else
+        :signals="signals.list.items"
+        :total="signals.list.total"
+        :page="signals.list.page"
+        :total-pages="signals.list.totalPages"
+        :loading="signals.tableLoading"
+        @page="goToPage"
+      />
+    </template>
+  </section>
+
   <div class="grid two">
     <section class="card"><h3>Reports by age group (sample)</h3><AgeBarChart :groups="age" /></section>
     <section class="card"><h3>Reports by sex (sample)</h3><DonutChart :values="sex" /></section>
@@ -75,4 +104,7 @@ const serious = [
 <style scoped>
 .tabs { margin: 1rem 0 .75rem; }
 .summary { margin: .75rem 0; font-size: .88rem; }
+.results { margin-bottom: 1rem; }
+.error { color: var(--coral); }
+.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
 </style>

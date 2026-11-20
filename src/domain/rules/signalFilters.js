@@ -89,3 +89,19 @@ export function queryFromFilters(filters) {
   if (f.page > 1) query.page = String(f.page)
   return query
 }
+
+// Why a list is empty, in words, so the empty state says what to change (FR-05). `filters` is the applied filter set.
+//   "No signals in 2026Q3 with at least 20 reports. Try a lower minimum."
+export function describeEmpty(filters, quarter = null) {
+  const f = { ...defaultFilters(), ...filters }
+  const min = effectiveMinReports(f)
+  const where = quarter ? ` in ${quarter}` : ''
+  const noun = f.tab === 'emerging' ? 'emerging signals' : 'signals'
+  const narrowed = f.tab === 'all' && (f.rxcui || f.reaction)
+  const tips = []
+  if (min > MIN_REPORT_OPTIONS[0]) tips.push('a lower minimum')
+  if (narrowed) tips.push('fewer filters')
+  if (f.tab === 'all' && f.onlySignals) tips.push('"Show all pairs"')
+  const tip = tips.length ? ` Try ${tips.join(' or ')}.` : ''
+  return `No ${noun}${where}${narrowed ? ' matching your filters' : ''} with at least ${min} reports.${tip}`
+}
