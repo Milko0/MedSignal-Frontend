@@ -14,5 +14,6 @@ export const useCabinetStore = defineStore('cabinet', () => {
   async function unfollow(rxcui) { await services.cabinet.unfollow(rxcui); await load() }
   async function dismiss(id) { await services.cabinet.dismiss(id); alerts.value = alerts.value.filter((a) => a.id !== id) }
   async function dismissAll() { await services.cabinet.dismissAll(); alerts.value = [] }
-  return { followed, alerts, load, follow, unfollow, dismiss, dismissAll }
+  function reset() { followed.value = []; alerts.value = [] }
+  return { followed, alerts, load, follow, unfollow, dismiss, dismissAll, reset }
 })

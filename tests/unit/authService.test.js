@@ -70,4 +70,36 @@ describe('authService', () => {
     await auth.logout()
     expect(authApi.logout).not.toHaveBeenCalled()
   })
+
+  it('restores the user for a stored token', async () => {
+    token = 'jwt'
+    await expect(auth.restore()).resolves.toEqual(user)
+    expect(auth.hasToken()).toBe(true)
+  })
+
+  it('does not call the profile when there is no stored token', async () => {
+    await expect(auth.restore()).resolves.toBeNull()
+    expect(profileApi.get).not.toHaveBeenCalled()
+  })
+
+  it('drops a token the server rejects and stays a guest', async () => {
+    token = 'garbage'
+    profileApi.get.mockRejectedValue(Object.assign(new Error('Invalid token'), { status: 401 }))
+    await expect(auth.restore()).resolves.toBeNull()
+    expect(auth.hasToken()).toBe(false)
+  })
+
+  it('keeps the token when the server cannot be reached', async () => {
+    token = 'jwt'
+    profileApi.get.mockRejectedValue(Object.assign(new Error('offline'), { status: 0 }))
+    await expect(auth.restore()).rejects.toThrow('offline')
+    expect(auth.hasToken()).toBe(true)
+  })
+
+  it('clears the session locally without calling the server', () => {
+    token = 'jwt'
+    auth.clearSession()
+    expect(auth.hasToken()).toBe(false)
+    expect(authApi.logout).not.toHaveBeenCalled()
+  })
 })

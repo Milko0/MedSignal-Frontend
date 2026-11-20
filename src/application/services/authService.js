@@ -29,6 +29,20 @@ export function createAuthService(authApi, profileApi, session) {
         session.clear()
       }
     },
+    // Reload the user for a stored token. A rejected token (401) is dropped and means "guest" (null);
+    // any other failure (network down, 5xx) is rethrown and the token is kept for the next try.
+    async restore() {
+      if (!session.get()) return null
+      try {
+        return await profileApi.get()
+      } catch (e) {
+        if (e?.status !== 401) throw e
+        session.clear()
+        return null
+      }
+    },
+    // Local only: used when the server already said the token is no good.
+    clearSession: () => session.clear(),
     hasToken: () => !!session.get(),
   }
 }

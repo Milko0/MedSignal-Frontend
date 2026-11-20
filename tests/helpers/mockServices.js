@@ -14,7 +14,7 @@ const fns = (names) => Object.fromEntries(names.map((name) => [name, vi.fn()]))
 
 export function mockServices() {
   return {
-    auth: fns(['login', 'register', 'logout', 'hasToken']),
+    auth: fns(['login', 'register', 'restore', 'logout', 'clearSession', 'hasToken']),
     drug: fns(['search', 'getDrug360', 'getReactionTrend', 'getLabelGaps', 'getAlternatives']),
     signal: fns(['list', 'emerging', 'reports', 'statistics']),
     cabinet: fns(['list', 'follow', 'unfollow', 'alerts', 'dismiss', 'dismissAll']),
