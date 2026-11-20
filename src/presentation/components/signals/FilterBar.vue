@@ -49,7 +49,7 @@ const hint = computed(() => HINTS[props.modelValue.tab] ?? '')
         :id="`${uid}-reaction`"
         :value="modelValue.reaction"
         :disabled="!applies('reaction')"
-        placeholder="e.g. nausea"
+        placeholder="Exact term, e.g. nausea"
         autocomplete="off"
         @input="set({ reaction: $event.target.value })"
       />

@@ -85,7 +85,10 @@ describe('DashboardView as a guest', () => {
 
     await w.find('tbody tr').trigger('click')
 
-    expect(push).toHaveBeenCalledWith({ path: '/signals', query: { rxcui: '5640', reaction: 'Gastrointestinal haemorrhage' } })
+    expect(push).toHaveBeenCalledWith({
+      path: '/signals',
+      query: { rxcui: '5640', drug: 'ibuprofen', reaction: 'Gastrointestinal haemorrhage', min: '3', all: '1' },
+    })
   })
 
   it('links to the emerging tab of the signals view', async () => {

@@ -155,6 +155,18 @@ describe('describeEmpty', () => {
     expect(describeEmpty(f, '2026Q3')).toBe('No signals in 2026Q3 with at least 3 reports.')
   })
 
+  it('says "1 report" for a minimum of 1', () => {
+    expect(describeEmpty({ ...defaultFilters(), minReports: 1, onlySignals: false }, '2026Q3')).toBe('No signals in 2026Q3 with at least 1 report.')
+  })
+
+  it('reminds that the reaction filter is an exact term', () => {
+    const f = { ...defaultFilters(), reaction: 'infusion', minReports: 3, onlySignals: false }
+
+    expect(describeEmpty(f, '2025Q4')).toBe(
+      'No signals in 2025Q4 matching your filters with at least 3 reports. Try fewer filters. The reaction must match a term exactly (e.g. "NAUSEA"), not part of one.',
+    )
+  })
+
   it('talks about emerging signals on the Emerging tab, with its default minimum of 3', () => {
     expect(describeEmpty({ ...defaultFilters(), tab: 'emerging' }, '2026Q3')).toBe('No emerging signals in 2026Q3 with at least 3 reports.')
     expect(describeEmpty({ ...defaultFilters(), tab: 'emerging', minReports: 10 }, null)).toBe('No emerging signals with at least 10 reports. Try a lower minimum.')

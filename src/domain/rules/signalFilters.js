@@ -103,5 +103,6 @@ export function describeEmpty(filters, quarter = null) {
   if (narrowed) tips.push('fewer filters')
   if (f.tab === 'all' && f.onlySignals) tips.push('"Show all pairs"')
   const tip = tips.length ? ` Try ${tips.join(' or ')}.` : ''
-  return `No ${noun}${where}${narrowed ? ' matching your filters' : ''} with at least ${min} reports.${tip}`
+  const exact = f.tab === 'all' && f.reaction ? ' The reaction must match a term exactly (e.g. "NAUSEA"), not part of one.' : ''
+  return `No ${noun}${where}${narrowed ? ' matching your filters' : ''} with at least ${min} ${min === 1 ? 'report' : 'reports'}.${tip}${exact}`
 }

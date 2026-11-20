@@ -14,7 +14,9 @@ defineEmits(['retry'])
 const router = useRouter()
 const rows = computed(() => props.data?.items ?? [])
 const quarter = computed(() => props.data?.quarter)
-const target = (s) => ({ path: '/signals', query: { rxcui: s.rxcui, reaction: s.reaction } })
+// The card lists pairs with 3 or more reports, but the explorer defaults to 20 and to Evans-criteria pairs only, so the
+// link carries both settings or a pair with few reports would open to an empty list.
+const target = (s) => ({ path: '/signals', query: { rxcui: s.rxcui, drug: s.drug, reaction: s.reaction, min: '3', all: '1' } })
 const open = (s) => router.push(target(s))
 </script>
 
