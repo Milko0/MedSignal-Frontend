@@ -27,7 +27,7 @@ const active = computed(() => isInShortage(props.shortage.status))
       </template>
       <template v-if="shortage.dosageForms.length">
         <dt>Forms on record</dt>
-        <dd>{{ shortage.dosageForms.join(', ') }}</dd>
+        <dd>{{ shortage.dosageForms.join('; ') }}</dd>
       </template>
     </dl>
   </section>

@@ -20,7 +20,7 @@ describe('ShortageStatusCard', () => {
     expect(w.find('.title').text()).toBe('Currently in shortage')
     expect(w.text()).toContain('Since 11 Feb 2026 · 3 of 41 packages affected')
     expect(w.text()).toContain('Increased demand')
-    expect(w.text()).toContain('TABLET, SUSPENSION')
+    expect(w.text()).toContain('TABLET; SUSPENSION')
   })
 
   it('says "No shortage reported" with no amber border when there is no record', () => {
@@ -149,8 +149,13 @@ describe('DosageFormSelect', () => {
 describe('formatPercent', () => {
   it('rounds a share to a whole percent', () => {
     expect(formatPercent(0.171)).toBe('17%')
-    expect(formatPercent(0.999)).toBe('100%')
     expect(formatPercent(0)).toBe('0%')
+    expect(formatPercent(1)).toBe('100%')
+  })
+
+  it('never shows less than everything as 100%', () => {
+    expect(formatPercent(0.999)).toBe('99%')
+    expect(formatPercent(0.996)).toBe('99%')
   })
 
   it('keeps the share between 0 and 100 and gives "" for unusable input', () => {
