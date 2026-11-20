@@ -41,3 +41,7 @@ Frontend tests.
 | `unit/pivotTrend.test.js`, `unit/formatShortage.test.js` | Trend pivot, shortage text, alternatives labels |
 | `components/DrugHeader.test.js`, `components/DrugCards.test.js` | Header (guest login link, Follow/Following), shortage / recalls / label cards, dosage-form select, percent, chip overrides |
 | `components/AlternativesTable.test.js`, `components/DrugDetailView.test.js` | Ranked rows and empty state; the whole Drug 360 page with its states |
+| `unit/signalFilters.test.js`, `unit/statsShaping.test.js` | Filters <-> URL round trip, per-tab minimum, empty-state text; statistics reshaping |
+| `unit/stores/useSignalStore*.test.js` | Signal store: tab -> service, stale answers, drawer incl. the `/` case, statistics scope and per-chart failures |
+| `components/FilterBar.test.js`, `components/SignalTable.test.js`, `components/LabelGapsTable.test.js`, `components/ReportsDrawer.test.js`, `components/StatCard.test.js` | Filter bar and tabs, table (sort, pager, chips), label gaps states, drawer (focus, states, pager), chart card states |
+| `components/SignalsView.test.js` | URL as source of truth with a real router, tabs, drawer, charts |

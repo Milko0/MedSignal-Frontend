@@ -24,5 +24,7 @@ Models (JSDoc typedefs) and pure business rules. JavaScript, not TypeScript.
 | `rules/pivotTrend.js` | Flat `[{month, reaction, reports}]` to chart series: top 3 reactions, calendar gaps filled with 0 |
 | `rules/formatShortage.js` | `formatShortage` (tone, title, subtitle) and `formatDate` (`12 Sep 2026`) |
 | `rules/alternatives.js` | Match type label, signal profile tone and label |
+| `rules/signalFilters.js` | Signal explorer filters <-> URL query (`filtersFromQuery`, `queryFromFilters`), the minimum per tab (20, Emerging 3), which filters each tab uses, `describeEmpty` |
+| `rules/statsShaping.js` | `/statistics` buckets to chart data: quarters newest first, age groups in order, sex shares adding up to 100.0, serious-over-time series with gaps as `null`, `groupLabel` |
 | `rules/percent.js` | `formatPercent(0.171)` = `17%`; below 1 never reads 100% |
 | `rules/relativeTime.js` | `relativeTime(iso, now)`: "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago", then the date |
