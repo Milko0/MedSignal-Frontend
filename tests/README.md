@@ -31,4 +31,10 @@ Frontend tests.
 | `unit/authService.test.js` | Login / register / logout through the session port |
 | `unit/mappers/*.test.js` | DTO to model mappers |
 | `unit/stores/useDrugStore.test.js` | Drug store with mocked services |
+| `unit/stores/useDrugStore.search.test.js` | Search: stale answers dropped, < 2 characters sends nothing, error state |
+| `unit/stores/useDashboardStore.test.js` | Guest loads only emerging; user loads all three; one failure keeps the others; tile counts; latest alerts |
+| `unit/relativeTime.test.js` | Minute / hour / yesterday / day / date boundaries |
+| `components/DrugSearchBox.test.js` | Debounce, keyboard, "matched", empty and error states, chips |
+| `components/DashboardView.test.js` | Guest and user dashboard, quarter title, disclaimer, error and Retry |
+| `components/Sparkline.test.js` | Path for n values, nothing for empty |
 | `components/StatusChip.test.js` | Chip label and tone, disclaimer footer text |

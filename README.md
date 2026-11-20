@@ -35,10 +35,10 @@ MedSignal-Frontend/
 │   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map)
 │   ├── domain/
 │   │   ├── models/                  # user, drug, signal, shortage, label, alert, cabinet, report, statistics, alertSettings, page (JSDoc typedefs)
-│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, authValidation.js, safeRedirect.js
+│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, relativeTime.js, authValidation.js, safeRedirect.js
 │   ├── application/
 │   │   ├── services/                # authService, drugService, signalService, cabinetService, profileService
-│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useUiStore
+│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useDashboardStore, useUiStore
 │   ├── infrastructure/
 │   │   ├── http/                    # httpClient.js (Axios, token getter, 401 hook), apiError.js, query.js
 │   │   ├── api/                     # authApi, drugsApi, shortagesApi, signalsApi, statisticsApi, cabinetApi, profileApi
@@ -46,16 +46,17 @@ MedSignal-Frontend/
 │   │   └── storage/tokenStorage.js
 │   └── presentation/
 │       ├── router/                  # index.js, routes.js, guards.js (guest vs authenticated)
-│       ├── layouts/                 # AppLayout (navbar + footer), AuthLayout
+│       ├── layouts/                 # AppLayout (navbar), AuthLayout
 │       ├── views/                   # AuthView, DashboardView, DrugDetailView,
 │       │                            # SignalsView, MedicineCabinetView, ProfileView
 │       ├── components/
 │       │   ├── common/              # AppNavbar, AlertBell, StatusChip, DisclaimerFooter, ToggleSwitch
 │       │   ├── drug/                # DrugSearchBox, DrugHeader, ShortageStatusCard, RecallsCard
+│       │   ├── dashboard/           # StatTile, EmergingSignalsCard, LatestAlertsCard
 │       │   ├── signals/             # FilterBar, SignalTable, PRRBadge, LabelGapChip
 │       │   ├── shortages/           # AlternativesTable
 │       │   ├── cabinet/             # FollowedDrugRow, AlertList
-│       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart
+│       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart, Sparkline
 │       ├── composables/             # useDebouncedSearch.js, useAsyncState.js
 │       └── styles/                  # tokens.css (palette), base.css
 └── tests/ {unit, components, helpers}   # Vitest + Vue Test Utils; helpers = fixtures, mock services, Pinia setup
@@ -68,7 +69,7 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | View | Route | Access | Requirements | Main components | Store | Backend endpoints |
 |---|---|---|---|---|---|---|
 | Log in and register | `/auth` | Guest only | FR-11, FR-12 | two forms, "Continue as guest" | `useAuthStore` | `POST /auth/login`, `POST /auth/register` |
-| Dashboard | `/` | Guest and user | FR-01, FR-06, FR-17, FR-18 | `DrugSearchBox`, latest alerts, emerging signals | `useDrugStore`, `useSignalStore`, `useCabinetStore` | `GET /drugs`, `GET /signals/emerging`, `GET /cabinet/alerts` |
+| Dashboard | `/` | Guest and user | FR-01, FR-06, FR-17, FR-18 | `DrugSearchBox`, `StatTile`, `LatestAlertsCard`, `EmergingSignalsCard` | `useDrugStore` (search), `useDashboardStore`, `useCabinetStore` | `GET /drugs`, `GET /signals/emerging`, `GET /cabinet`, `GET /cabinet/alerts` |
 | Drug details (Drug 360) | `/drugs/:rxcui` | Guest (follow needs login) | FR-02, FR-03, FR-10, FR-15 | `DrugHeader`, `ShortageStatusCard`, `RecallsCard`, `ReactionBars`, `TrendChart`, `AlternativesTable` | `useDrugStore` | `GET /drugs/{rxcui}/overview`, `.../reaction-trend`, `GET /shortages/{rxcui}/alternatives`, `POST/DELETE /cabinet/follows` |
 | Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `FilterBar`, `SignalTable`, `PRRBadge`, `LabelGapChip`, `AgeBarChart`, `DonutChart`, `TrendChart` | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
 | My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList` | `useCabinetStore` | `GET /cabinet`, `GET/DELETE /cabinet/alerts` |
@@ -115,8 +116,8 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
-- **Placeholders with TODOs:** Dashboard, Drug details, My medicines and Profile content, and the table components (`SignalTable`, `FilterBar`, `AlternativesTable`, `FollowedDrugRow`, `AlertList` and similar).
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
+- **Placeholders with TODOs:** Drug details, My medicines and Profile content, and the table components (`SignalTable`, `FilterBar`, `AlternativesTable`, `FollowedDrugRow`, `AlertList` and similar).
 
 ## 9. How to add a feature
 

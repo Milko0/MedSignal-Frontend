@@ -20,3 +20,4 @@ Interactive charts with Plotly.js (hover tooltips, zoom, responsive).
 | `TrendChart.vue` | Monthly trend, unified hover |
 | `DonutChart.vue` | Reports by sex |
 | `AgeBarChart.vue` | Reports by age group |
+| `Sparkline.vue` | Tiny inline SVG trend line (no Plotly), for table rows |

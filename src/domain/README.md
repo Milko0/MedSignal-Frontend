@@ -21,3 +21,4 @@ Models (JSDoc typedefs) and pure business rules. JavaScript, not TypeScript.
 | `rules/isEmerging.js` | FR-06 |
 | `rules/shortageStatus.js` | `isInShortage`, `shortageTone`, `shortageLabel` for the backend enum (`CURRENT`, `TO_BE_DISCONTINUED`, `RESOLVED`, `null`) |
 | `rules/alertTone.js` | Alert type (`SIGNAL`, `SHORTAGE`, `LABEL`, `RECALL`) to tone and label |
+| `rules/relativeTime.js` | `relativeTime(iso, now)`: "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago", then the date |
