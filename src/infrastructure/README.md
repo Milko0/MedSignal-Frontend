@@ -11,7 +11,7 @@ HTTP client, API adapters, mappers, token storage.
 
 - Imports core only (and domain typedefs).
 - Mappers convert API snake_case JSON to domain camelCase models.
-- One adapter file per backend router; endpoints match `/api/v1` in the backend Swagger.
+- One adapter file per backend router; endpoints match `/api` in the backend Swagger.
 
 ## Contents
 

@@ -18,7 +18,7 @@ The frontend mirrors the backend's clean architecture. Dependencies point inward
 | Core | `src/core` | API base URL, constants (disclaimer, status palette) | - | - |
 
 `src/composition/container.js` is the **composition root**: the only file that wires the concrete API adapters into the services.
-Data flow: view -> store -> service -> API adapter -> backend `/api/v1`. Mappers convert the API's snake_case JSON into camelCase domain models.
+Data flow: view -> store -> service -> API adapter -> backend `/api`. Mappers convert the API's snake_case JSON into camelCase domain models.
 
 ## 2. Folder structure
 
@@ -97,7 +97,7 @@ Routing: `meta.requiresAuth` sends guests to `/auth`; `meta.guestOnly` sends log
 
 ## 6. Configuration
 
-Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api/v1`) is the base path of the backend. In development Vite proxies `/api` to the API on port 8000; in production Nginx does (`nginx.conf`, upstream `api:8000`; change it to the VM address on the Virtual Lab).
+Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api`) is the base path of the backend. In development Vite proxies `/api` to the API on port 8000; in production Nginx does (`nginx.conf`, upstream `api:8000`; change it to the VM address on the Virtual Lab).
 
 ## 7. Run, test, build
 
