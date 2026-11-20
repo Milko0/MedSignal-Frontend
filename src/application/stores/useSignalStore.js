@@ -208,9 +208,10 @@ export const useSignalStore = defineStore('signal', () => {
     reportsDrawer.value = emptyDrawer()
   }
 
-  // Called by the view with route.query on enter and whenever the query changes.
-  async function applyQuery(query) {
-    filters.value = filtersFromQuery(query)
+  // Called by the view with route.query on enter and whenever the query changes. `defaults` is what is not in the URL
+  // (the user's own minimum reports from the alert settings).
+  async function applyQuery(query, defaults = {}) {
+    filters.value = filtersFromQuery(query, defaults)
     closeReports()                    // the rows the drawer belonged to are gone
     await Promise.all([loadTable(), refreshStats()])
   }

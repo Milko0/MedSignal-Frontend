@@ -4,6 +4,8 @@
 // reload and back/forward restore the same view. The statistics charts describe the same drug and quarter as the table.
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/application/stores/useAuthStore'
+import { useProfileStore } from '@/application/stores/useProfileStore'
 import { useSignalStore } from '@/application/stores/useSignalStore'
 import { defaultFilters, describeEmpty, effectiveMinReports, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
 import { formatPercent } from '@/domain/rules/percent'
@@ -21,14 +23,24 @@ import DisclaimerFooter from '@/presentation/components/common/DisclaimerFooter.
 const route = useRoute()
 const router = useRouter()
 const signals = useSignalStore()
+const auth = useAuthStore()
+const profile = useProfileStore()
 
 const draft = ref(defaultFilters())   // what the filter bar edits; applied on "Apply filters"
 
+// A logged-in user's own "minimum reports" (alert settings) is the default of the filter when the URL has no `min`.
+// The settings are read once (the profile store keeps them); until they are known the first load waits, so the table
+// is not loaded twice. A failed read just means the usual defaults.
+const defaults = computed(() => ({ minReports: auth.loggedIn ? profile.minReports : null }))
+const settingsReady = ref(!auth.loggedIn || profile.loaded)
+if (!settingsReady.value) profile.load().then(() => { settingsReady.value = true })
+
 watch(
-  () => route.query,
-  (query) => {
-    draft.value = filtersFromQuery(query)
-    signals.applyQuery(query)
+  [() => route.query, defaults, settingsReady],
+  ([query, defaultValues, ready]) => {
+    if (!ready) return
+    draft.value = filtersFromQuery(query, defaultValues)
+    signals.applyQuery(query, defaultValues)
   },
   { immediate: true },
 )
@@ -37,7 +49,7 @@ watch(
 // "Apply" on unchanged filters is how a user asks for fresh data.
 function go(filters) {
   const query = queryFromFilters(filters)
-  const same = JSON.stringify(query) === JSON.stringify(queryFromFilters(filtersFromQuery(route.query)))
+  const same = JSON.stringify(query) === JSON.stringify(queryFromFilters(filtersFromQuery(route.query, defaults.value)))
   if (same) { signals.loadTable(); signals.loadStats() }
   else router.push({ query })
 }

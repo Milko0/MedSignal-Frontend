@@ -501,3 +501,94 @@ describe('SignalsView: statistics charts', () => {
   })
 })
 
+
+describe("SignalsView: the user's own minimum reports (alert settings)", () => {
+  const mine = (minReports) => ({ newSignal: true, labelUpdated: true, shortageChanged: true, newRecall: true, minReports })
+  const loggedIn = (minReports = 50) => {
+    services.auth.hasToken.mockReturnValue(true)
+    services.profile.getAlertSettings.mockResolvedValue(mine(minReports))
+  }
+
+  it('a logged-in user with a minimum of 50 opens /signals with 50, in one request, and the URL stays clean', async () => {
+    loggedIn()
+    const w = await open('/signals')
+
+    expect(services.profile.getAlertSettings).toHaveBeenCalledOnce()
+    expect(services.signal.list).toHaveBeenCalledOnce()
+    expect(lastList().minReports).toBe(50)
+    expect(field(w, 'Minimum reports').find('select').element.value).toBe('50')
+    expect(router.currentRoute.value.query).toEqual({})
+  })
+
+  it('a min in the URL wins over the setting', async () => {
+    loggedIn()
+    await open('/signals?min=5')
+    expect(lastList().minReports).toBe(5)
+  })
+
+  it('the Emerging tab keeps its own 3', async () => {
+    loggedIn()
+    await open('/signals?tab=emerging')
+    expect(services.signal.emerging.mock.lastCall[0].minReports).toBe(3)
+  })
+
+  it('the Label gaps tab uses the setting', async () => {
+    loggedIn()
+    await open('/signals?tab=gaps&rxcui=5640')
+    expect(services.drug.getLabelGaps).toHaveBeenCalledWith('5640', 50)
+  })
+
+  it('choosing 20 explicitly is kept in the URL, because it is not the default of this user', async () => {
+    loggedIn()
+    const w = await open('/signals')
+    await field(w, 'Minimum reports').find('select').setValue('20')
+    await apply(w)
+
+    expect(router.currentRoute.value.query).toEqual({ min: '20' })
+    expect(lastList().minReports).toBe(20)
+  })
+
+  it('"Reset" goes back to the setting of the user', async () => {
+    loggedIn()
+    const w = await open('/signals?min=5&reaction=nausea')
+    await w.findAll('button').find((b) => b.text() === 'Reset').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({})
+    expect(lastList().minReports).toBe(50)
+  })
+
+  it('a guest does not read the settings and gets 20', async () => {
+    await open('/signals')
+    expect(services.profile.getAlertSettings).not.toHaveBeenCalled()
+    expect(lastList().minReports).toBe(20)
+  })
+
+  it('when the settings cannot be read the usual 20 applies and the page still loads', async () => {
+    services.auth.hasToken.mockReturnValue(true)
+    services.profile.getAlertSettings.mockRejectedValue(new Error('boom'))
+    await open('/signals')
+
+    expect(services.signal.list).toHaveBeenCalledOnce()
+    expect(lastList().minReports).toBe(20)
+  })
+
+  it('settings the user already loaded (profile page) are used at once, without another read', async () => {
+    loggedIn(10)
+    pinia = createPinia(); setActivePinia(pinia)
+    const { useProfileStore } = await import('@/application/stores/useProfileStore')
+    await useProfileStore().load()
+    services.profile.getAlertSettings.mockClear()
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/signals', name: 'signals', component: SignalsView }, { path: '/', component: { template: '<div />' } }],
+    })
+    await router.push('/signals')
+    await router.isReady()
+    mount(SignalsView, { global: { plugins: [pinia, router], stubs } })
+    await flushPromises()
+
+    expect(services.profile.getAlertSettings).not.toHaveBeenCalled()
+    expect(lastList().minReports).toBe(10)
+  })
+})

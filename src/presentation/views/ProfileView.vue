@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/application/stores/useAuthStore'
 import ProfileForm from '@/presentation/components/profile/ProfileForm.vue'
 import PasswordForm from '@/presentation/components/profile/PasswordForm.vue'
+import AlertSettingsCard from '@/presentation/components/profile/AlertSettingsCard.vue'
 
 const auth = useAuthStore()
 </script>
@@ -14,6 +15,7 @@ const auth = useAuthStore()
   <div class="layout">
     <nav class="menu" aria-label="Profile sections">
       <a href="#profile">Profile</a>
+      <a href="#alerts">Alert settings</a>
     </nav>
 
     <div class="sections">
@@ -25,6 +27,7 @@ const auth = useAuthStore()
         <ProfileForm />
         <PasswordForm />
       </section>
+      <section v-if="auth.user" id="alerts" aria-label="Alert settings"><AlertSettingsCard /></section>
     </div>
   </div>
 </template>

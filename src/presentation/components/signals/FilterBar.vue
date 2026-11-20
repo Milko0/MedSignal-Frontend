@@ -4,7 +4,7 @@
 import { computed, useId } from 'vue'
 import DrugSearchBox from '@/presentation/components/drug/DrugSearchBox.vue'
 import ToggleSwitch from '@/presentation/components/common/ToggleSwitch.vue'
-import { MIN_REPORT_OPTIONS, defaultMinReports, filterApplies } from '@/domain/rules/signalFilters'
+import { MIN_REPORT_OPTIONS, effectiveMinReports, filterApplies } from '@/domain/rules/signalFilters'
 
 const props = defineProps({
   modelValue: { type: Object, required: true },        // draft filters
@@ -21,7 +21,7 @@ const quarterOptions = computed(() => {
   const q = props.modelValue.quarter
   return q && !props.quarters.includes(q) ? [q, ...props.quarters] : props.quarters
 })
-const minValue = computed(() => props.modelValue.minReports ?? defaultMinReports(props.modelValue.tab))
+const minValue = computed(() => effectiveMinReports(props.modelValue))
 const minOptions = computed(() => (MIN_REPORT_OPTIONS.includes(minValue.value) ? MIN_REPORT_OPTIONS : [...MIN_REPORT_OPTIONS, minValue.value].sort((a, b) => a - b)))
 
 const HINTS = {

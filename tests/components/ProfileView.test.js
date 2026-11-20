@@ -11,6 +11,7 @@ const { useAuthStore } = await import('@/application/stores/useAuthStore')
 const ProfileView = (await import('@/presentation/views/ProfileView.vue')).default
 
 const user = { id: 'u-1', username: 'p7_test_user', email: 'p7_test_user@example.com', role: 'user' }
+const settings = { newSignal: true, labelUpdated: true, shortageChanged: true, newRecall: true, minReports: 20 }
 const failure = (status, message) => Object.assign(new Error(message), { status })
 
 let pinia
@@ -34,6 +35,7 @@ beforeEach(() => {
   token = 'jwt'
   services.auth.hasToken.mockImplementation(() => !!token)
   services.auth.clearSession.mockImplementation(() => { token = null })
+  services.profile.getAlertSettings.mockResolvedValue({ ...settings })
 })
 
 describe('profile card', () => {
@@ -197,5 +199,128 @@ describe('password card', () => {
     await open(w)
     expect(pw(w, 'New password').element.value).toBe('')
     expect(w.text()).not.toContain('Password changed.')
+  })
+})
+
+describe('alert settings card', () => {
+  const sw = (w, label) => w.findAll('.toggle').find((t) => t.find('.label').text() === label).find('input')
+  const min = (w) => w.find('select')
+  const saveSettings = (w) => w.findAll('button').find((b) => b.text().startsWith('Save settings'))
+  const sendSettings = async (w) => {
+    await w.find('form[aria-label="Alert settings"]').trigger('submit')
+    await flushPromises()
+  }
+
+  it('reads the settings on opening and shows the four switches (all on) and the minimum 20', async () => {
+    const w = await show()
+
+    expect(services.profile.getAlertSettings).toHaveBeenCalledOnce()
+    for (const label of ['New safety signal', 'Label updated', 'Shortage status changes', 'New recall']) {
+      expect(sw(w, label).element.checked, label).toBe(true)
+    }
+    expect(min(w).element.value).toBe('20')
+    expect([...min(w).element.options].map((o) => o.value)).toEqual(['3', '5', '10', '20', '50', '100'])
+  })
+
+  it('shows the explanation under each switch', async () => {
+    const w = await show()
+    expect(w.findAll('.toggle .hint')).toHaveLength(4)
+  })
+
+  it('"Save settings" is disabled until something changes, and a note appears with the change', async () => {
+    const w = await show()
+    expect(saveSettings(w).attributes('disabled')).toBeDefined()
+    expect(w.text()).not.toContain('unsaved changes')
+
+    await sw(w, 'New recall').setValue(false)
+    expect(saveSettings(w).attributes('disabled')).toBeUndefined()
+    expect(w.text()).toContain('You have unsaved changes.')
+
+    await sw(w, 'New recall').setValue(true)
+    expect(saveSettings(w).attributes('disabled')).toBeDefined()
+    expect(w.text()).not.toContain('unsaved changes')
+  })
+
+  it('nothing is sent when a switch is toggled, only when the user saves', async () => {
+    const w = await show()
+    await sw(w, 'New recall').setValue(false)
+    await min(w).setValue('50')
+    expect(services.profile.saveAlertSettings).not.toHaveBeenCalled()
+  })
+
+  it('saves the whole object (recall off, minimum 50) and shows it as saved', async () => {
+    services.profile.saveAlertSettings.mockResolvedValue({ ...settings, newRecall: false, minReports: 50 })
+    const w = await show()
+
+    await sw(w, 'New recall').setValue(false)
+    await min(w).setValue('50')
+    await sendSettings(w)
+
+    expect(services.profile.saveAlertSettings).toHaveBeenCalledWith({ ...settings, newRecall: false, minReports: 50 })
+    expect(w.text()).toContain('Settings saved.')
+    expect(w.text()).not.toContain('unsaved changes')
+    expect(saveSettings(w).attributes('disabled')).toBeDefined()
+    expect(min(w).element.value).toBe('50')
+  })
+
+  it('a failed save shows the error, keeps the edits and can be tried again', async () => {
+    services.profile.saveAlertSettings.mockRejectedValueOnce(failure(0, 'Cannot reach the server. Check your connection and try again.'))
+    services.profile.saveAlertSettings.mockResolvedValueOnce({ ...settings, newSignal: false })
+    const w = await show()
+
+    await sw(w, 'New safety signal').setValue(false)
+    await sendSettings(w)
+    expect(w.find('.banner').text()).toMatch(/cannot reach the server/i)
+    expect(sw(w, 'New safety signal').element.checked).toBe(false)
+    expect(w.text()).toContain('You have unsaved changes.')
+
+    await sendSettings(w)
+    expect(w.find('.banner').exists()).toBe(false)
+    expect(w.text()).toContain('Settings saved.')
+  })
+
+  it('"Discard changes" puts the saved values back', async () => {
+    const w = await show()
+    await sw(w, 'Label updated').setValue(false)
+    await min(w).setValue('100')
+
+    await w.findAll('button').find((b) => b.text() === 'Discard changes').trigger('click')
+
+    expect(sw(w, 'Label updated').element.checked).toBe(true)
+    expect(min(w).element.value).toBe('20')
+    expect(w.text()).not.toContain('unsaved changes')
+  })
+
+  it('shows a saved minimum that is not one of the choices', async () => {
+    services.profile.getAlertSettings.mockResolvedValue({ ...settings, minReports: 25 })
+    const w = await show()
+    expect(min(w).element.value).toBe('25')
+    expect([...min(w).element.options].map((o) => o.value)).toEqual(['3', '5', '10', '20', '25', '50', '100'])
+  })
+
+  it('shows what was saved earlier (a recall alert off, minimum 50)', async () => {
+    services.profile.getAlertSettings.mockResolvedValue({ ...settings, newRecall: false, minReports: 50 })
+    const w = await show()
+    expect(sw(w, 'New recall').element.checked).toBe(false)
+    expect(min(w).element.value).toBe('50')
+  })
+
+  it('a failed read shows a retry, and the retry fills the card', async () => {
+    services.profile.getAlertSettings.mockRejectedValueOnce(failure(500, 'boom'))
+    const w = await show()
+    expect(w.text()).toContain('Could not load your alert settings.')
+    expect(w.find('form[aria-label="Alert settings"]').exists()).toBe(false)
+    // the profile card does not depend on it
+    expect(input(w, 'Username').element.value).toBe('p7_test_user')
+
+    await w.findAll('button.link').find((b) => b.text() === 'Retry').trigger('click')
+    await flushPromises()
+    expect(w.find('form[aria-label="Alert settings"]').exists()).toBe(true)
+  })
+
+  it('has a menu entry that jumps to the section', async () => {
+    const w = await show()
+    expect(w.find('nav a[href="#alerts"]').exists()).toBe(true)
+    expect(w.find('section#alerts').exists()).toBe(true)
   })
 })

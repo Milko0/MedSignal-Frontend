@@ -10,7 +10,9 @@ export const MIN_REPORT_OPTIONS = [3, 5, 10, 20, 50, 100]
 // The backend's own defaults: the explorer asks for 20 reports, the emerging list for 3. A `min` that was not set
 // explicitly follows the tab, so the dashboard's emerging card and the Emerging tab show the same list.
 const DEFAULT_MIN = { all: 20, emerging: 3, gaps: 20 }
-export const defaultMinReports = (tab) => DEFAULT_MIN[tab] ?? DEFAULT_MIN.all
+// A logged-in user may have chosen their own minimum in the alert settings (`userMin`): it replaces the default of the
+// All and Gaps tabs. Emerging keeps its 3 so that it stays the same list as the dashboard's emerging card.
+export const defaultMinReports = (tab, userMin = null) => (tab === 'emerging' ? DEFAULT_MIN.emerging : (userMin ?? DEFAULT_MIN[tab] ?? DEFAULT_MIN.all))
 
 // Which filters each tab actually sends to the backend (the others are shown disabled):
 //   all      GET /signals                      drug, reaction, quarter, min reports, "show all pairs"
@@ -30,12 +32,13 @@ export const defaultFilters = () => ({
   reaction: '',
   quarter: null,         // null = latest (the response says which)
   minReports: null,      // null = the tab's default
+  defaultMin: null,      // the user's own default from their alert settings (filtersFromQuery's `defaults`); not in the URL
   onlySignals: true,     // false = also pairs that do not meet the Evans criteria
   page: 1,
   pageSize: PAGE_SIZE,
 })
 
-export const effectiveMinReports = (filters) => filters.minReports ?? defaultMinReports(filters.tab)
+export const effectiveMinReports = (filters) => filters.minReports ?? defaultMinReports(filters.tab, filters.defaultMin)
 
 const first = (value) => (Array.isArray(value) ? value[0] : value)
 const text = (value, max) => {
@@ -50,8 +53,10 @@ const positiveInt = (value, max = 1_000_000) => {
 }
 
 // Anything that is not understood falls back to its default instead of failing, so a hand-edited or old link still opens.
-export function filtersFromQuery(query = {}) {
+// `defaults` come from outside the URL: { minReports } is the user's own minimum, used when the URL has no `min`.
+export function filtersFromQuery(query = {}, defaults = {}) {
   const f = defaultFilters()
+  f.defaultMin = positiveInt(typeof defaults.minReports === 'number' ? String(defaults.minReports) : null)
   const tab = first(query.tab)
   if (TABS.includes(tab)) f.tab = tab
 
@@ -84,7 +89,7 @@ export function queryFromFilters(filters) {
   }
   if (filterApplies(f.tab, 'reaction') && f.reaction?.trim()) query.reaction = f.reaction.trim()
   if (filterApplies(f.tab, 'quarter') && f.quarter) query.quarter = f.quarter
-  if (f.minReports != null && f.minReports !== defaultMinReports(f.tab)) query.min = String(f.minReports)
+  if (f.minReports != null && f.minReports !== defaultMinReports(f.tab, f.defaultMin)) query.min = String(f.minReports)
   if (filterApplies(f.tab, 'pairs') && f.onlySignals === false) query.all = '1'
   if (f.page > 1) query.page = String(f.page)
   return query

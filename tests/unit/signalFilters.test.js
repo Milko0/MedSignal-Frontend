@@ -14,7 +14,7 @@ describe('filtersFromQuery', () => {
       tab: 'emerging', rxcui: '5640', drug: 'IBUPROFEN', reaction: ' nausea ', quarter: '2026Q2', min: '50', all: '1', page: '3',
     })).toEqual({
       tab: 'emerging', rxcui: '5640', drugName: 'IBUPROFEN', reaction: 'nausea', quarter: '2026Q2',
-      minReports: 50, onlySignals: false, page: 3, pageSize: 10,
+      minReports: 50, defaultMin: null, onlySignals: false, page: 3, pageSize: 10,
     })
   })
 
