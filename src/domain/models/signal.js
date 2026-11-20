@@ -3,12 +3,30 @@
  * @property {string} rxcui
  * @property {string} drug
  * @property {string} reaction
+ * @property {string} quarter
  * @property {number} reports
+ * @property {number} a   2x2 table cells behind the PRR
+ * @property {number} b
+ * @property {number} c
+ * @property {number} d
  * @property {number} prr
  * @property {number} ciLower
  * @property {number} chiSquare
- * @property {boolean|null} inLabel
- * @property {'known'|'literature'|'novel'|null} novelty
+ * @property {boolean} isSignal    Evans criteria met
+ * @property {boolean} isEmerging
+ * @property {'FULL'|'PARTIAL'|'NONE'} labelMatch
  * @property {number[]} trend
+ */
+
+/**
+ * @typedef {Object} SignalList
+ * @property {Signal[]} items
+ * @property {number} total
+ * @property {number} page
+ * @property {number} pageSize
+ * @property {number} totalPages
+ * @property {string|null} quarter   the quarter the backend used (the latest one when none was asked for)
+ * @property {number} matchCoverage
+ * @property {string|null} [disclaimer]  added by the adapter from meta.disclaimer
  */
 export {}

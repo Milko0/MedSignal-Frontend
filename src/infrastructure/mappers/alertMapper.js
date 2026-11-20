@@ -1,1 +1,8 @@
-export const toAlert = (d) => ({ id: d.id, type: d.type, rxcui: d.rxcui, title: d.title, detail: d.detail, createdAt: d.created_at })
+// AlertItem -> Alert. type is SIGNAL | LABEL | SHORTAGE | RECALL.
+export const toAlert = (d) => ({
+  id: d.alert_id,
+  type: d.type,
+  rxcui: d.drug_rxcui,
+  message: d.message,
+  createdAt: d.created_at,
+})

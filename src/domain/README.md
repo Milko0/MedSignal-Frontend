@@ -16,7 +16,18 @@ Models (JSDoc typedefs) and pure business rules. JavaScript, not TypeScript.
 
 | Item | Role |
 |---|---|
-| `models/` | Drug, Signal, Alternative, LabelGap, Alert, User typedefs |
-| `rules/signalSeverity.js` | PRR to severity tone |
+| `models/` | User, Drug360, DrugSearchResult, TrendPoint, Signal, SignalList, LabelGaps, Alternatives, Alert, FollowedDrug, ReportBrief, Statistics, AlertSettings, Page typedefs (camelCase, mirror the backend DTOs) |
+| `rules/signalSeverity.js` | PRR to severity tone, label match text (Listed / Partly listed / Not listed) |
 | `rules/isEmerging.js` | FR-06 |
-| `rules/shortageStatus.js` | Shortage predicate |
+| `rules/shortageStatus.js` | `isInShortage`, `shortageTone`, `shortageLabel` for the backend enum (`CURRENT`, `TO_BE_DISCONTINUED`, `RESOLVED`, `null`) |
+| `rules/alertTone.js` | Alert type (`SIGNAL`, `SHORTAGE`, `LABEL`, `RECALL`) to tone and label |
+| `rules/pivotTrend.js` | Flat `[{month, reaction, reports}]` to chart series: top 3 reactions, calendar gaps filled with 0 |
+| `rules/formatShortage.js` | `formatShortage` (tone, title, subtitle) and `formatDate` (`12 Sep 2026`) |
+| `rules/alternatives.js` | Match type label, signal profile tone and label |
+| `rules/signalFilters.js` | Signal explorer filters <-> URL query (`filtersFromQuery`, `queryFromFilters`), the minimum per tab (20, Emerging 3) or the user's own (`defaults.minReports`), which filters each tab uses, `describeEmpty` |
+| `rules/authValidation.js` | Login, register, profile and password-change checks that mirror the backend limits; `profileChanges` (what the profile form changed, email compared in lower case); `mapAuthError` / `mapProfileError` turn an `ApiError` into field messages and a banner |
+| `rules/alertSettings.js` | The four alert switches with their texts, default settings, `settingsChanged` (unsaved-changes check) |
+| `rules/cabinet.js` | My medicines: rows from followed drugs + alerts (newest alert, status chip, filter chips, ordering) |
+| `rules/statsShaping.js` | `/statistics` buckets to chart data: quarters newest first, age groups in order, sex shares adding up to 100.0, serious-over-time series with gaps as `null`, `groupLabel` |
+| `rules/percent.js` | `formatPercent(0.171)` = `17%`; below 1 never reads 100% |
+| `rules/relativeTime.js` | `relativeTime(iso, now)`: "just now", "5 min ago", "2 h ago", "yesterday", "3 days ago", then the date |

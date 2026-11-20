@@ -11,14 +11,14 @@ The frontend mirrors the backend's clean architecture. Dependencies point inward
 
 | Layer | Folder | Responsibility | May import | Never imports |
 |---|---|---|---|---|
-| Domain | `src/domain` | Models (JSDoc typedefs) and pure rules: `signalSeverity`, `isEmerging`, `shortageStatus` | nothing | Vue, Axios, Pinia |
+| Domain | `src/domain` | Models (JSDoc typedefs) and pure rules: `signalSeverity`, `isEmerging`, `shortageStatus`, `alertTone` | nothing | Vue, Axios, Pinia |
 | Application | `src/application` | Services (use-case logic) and Pinia stores (UI state) | domain, core | Axios, components |
-| Infrastructure | `src/infrastructure` | Axios client (JWT header, 401 handling), API adapters, mappers, token storage | core, domain | presentation |
+| Infrastructure | `src/infrastructure` | Axios client (token getter, `ApiError`, 401 hook), API adapters that return models, mappers, token storage | core, domain | presentation |
 | Presentation | `src/presentation` | Views, layouts, components, charts, router with guards, styles, composables | application, core | infrastructure |
 | Core | `src/core` | API base URL, constants (disclaimer, status palette) | - | - |
 
 `src/composition/container.js` is the **composition root**: the only file that wires the concrete API adapters into the services.
-Data flow: view -> store -> service -> API adapter -> backend `/api/v1`. Mappers convert the API's snake_case JSON into camelCase domain models.
+Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters call the mappers, which convert the API's snake_case JSON into camelCase domain models, so everything above infrastructure sees only models. Failed requests reject with one `ApiError { status, message, fieldErrors, url }`.
 
 ## 2. Folder structure
 
@@ -27,38 +27,40 @@ MedSignal-Frontend/
 ├── index.html  vite.config.js  jsconfig.json  package.json  .env.example
 ├── Dockerfile  nginx.conf
 ├── src/
-│   ├── main.js                      # Creates the app, Pinia and the router
+│   ├── main.js                      # Creates the app and Pinia, plugs in the 401 handler, restores the session, then installs the router
 │   ├── App.vue
 │   ├── composition/container.js     # Composition root
 │   ├── core/
 │   │   ├── config/env.js            # API base URL
-│   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map)
+│   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map), auth.js (401s that are not a session expiry)
 │   ├── domain/
-│   │   ├── models/                  # drug, signal, shortage, label, alert, user (JSDoc typedefs)
-│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, isEmerging.js
+│   │   ├── models/                  # user, drug, signal, shortage, label, alert, cabinet, report, statistics, alertSettings, page (JSDoc typedefs)
+│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, relativeTime.js, pivotTrend.js, formatShortage.js, alternatives.js, percent.js, signalFilters.js, statsShaping.js, cabinet.js, authValidation.js, safeRedirect.js, alertSettings.js
 │   ├── application/
 │   │   ├── services/                # authService, drugService, signalService, cabinetService, profileService
-│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useUiStore
+│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useProfileStore, useDashboardStore, useUiStore
 │   ├── infrastructure/
-│   │   ├── http/httpClient.js       # Axios, JWT header, 401 handling
-│   │   ├── api/                     # authApi, drugsApi, signalsApi, statisticsApi, cabinetApi, profileApi
-│   │   ├── mappers/                 # drugMapper, signalMapper, alertMapper
+│   │   ├── http/                    # httpClient.js (Axios, token getter, 401 hook), apiError.js, query.js
+│   │   ├── api/                     # authApi, drugsApi, shortagesApi, signalsApi, statisticsApi, cabinetApi, profileApi
+│   │   ├── mappers/                 # one per backend DTO: common, user, drug, trend, labelGap, alternative, signal, report, statistics, cabinet, alert, profile
 │   │   └── storage/tokenStorage.js
 │   └── presentation/
 │       ├── router/                  # index.js, routes.js, guards.js (guest vs authenticated)
-│       ├── layouts/                 # AppLayout (navbar + footer), AuthLayout
+│       ├── layouts/                 # AppLayout (navbar), AuthLayout
 │       ├── views/                   # AuthView, DashboardView, DrugDetailView,
 │       │                            # SignalsView, MedicineCabinetView, ProfileView
 │       ├── components/
 │       │   ├── common/              # AppNavbar, AlertBell, StatusChip, DisclaimerFooter, ToggleSwitch
-│       │   ├── drug/                # DrugSearchBox, DrugHeader, ShortageStatusCard, RecallsCard
-│       │   ├── signals/             # FilterBar, SignalTable, PRRBadge, LabelGapChip
+│       │   ├── drug/                # DrugSearchBox, DrugHeader, ShortageStatusCard, RecallsCard, LabelCard, DosageFormSelect
+│       │   ├── dashboard/           # StatTile, EmergingSignalsCard, LatestAlertsCard
+│       │   ├── signals/             # SignalTabs, FilterBar, SignalTable, PRRBadge, LabelGapChip, LabelGapsTable, ReportsDrawer, StatCard
 │       │   ├── shortages/           # AlternativesTable
 │       │   ├── cabinet/             # FollowedDrugRow, AlertList
-│       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart
+│       │   ├── profile/             # ProfileForm, PasswordForm, AlertSettingsCard, AccountCard
+│       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart, Sparkline
 │       ├── composables/             # useDebouncedSearch.js, useAsyncState.js
 │       └── styles/                  # tokens.css (palette), base.css
-└── tests/ {unit, components}        # Vitest + Vue Test Utils
+└── tests/ {unit, components, helpers}   # Vitest + Vue Test Utils; helpers = fixtures, mock services, Pinia setup
 ```
 
 ## 3. Views and functionalities
@@ -68,13 +70,15 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | View | Route | Access | Requirements | Main components | Store | Backend endpoints |
 |---|---|---|---|---|---|---|
 | Log in and register | `/auth` | Guest only | FR-11, FR-12 | two forms, "Continue as guest" | `useAuthStore` | `POST /auth/login`, `POST /auth/register` |
-| Dashboard | `/` | Guest and user | FR-01, FR-06, FR-17, FR-18 | `DrugSearchBox`, latest alerts, emerging signals | `useDrugStore`, `useSignalStore`, `useCabinetStore` | `GET /drugs`, `GET /signals/emerging`, `GET /cabinet/alerts` |
-| Drug details (Drug 360) | `/drugs/:rxcui` | Guest (follow needs login) | FR-02, FR-03, FR-10, FR-15 | `DrugHeader`, `ShortageStatusCard`, `RecallsCard`, `ReactionBars`, `TrendChart`, `AlternativesTable` | `useDrugStore` | `GET /drugs/{rxcui}/overview`, `.../reaction-trend`, `GET /shortages/{rxcui}/alternatives`, `POST/DELETE /cabinet/follows` |
-| Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `FilterBar`, `SignalTable`, `PRRBadge`, `LabelGapChip`, `AgeBarChart`, `DonutChart`, `TrendChart` | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
-| My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList` | `useCabinetStore` | `GET /cabinet`, `GET/DELETE /cabinet/alerts` |
-| Profile and settings | `/profile` | User | FR-13, FR-14 | profile form, password form, `ToggleSwitch` alert settings | `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
+| Dashboard | `/` | Guest and user | FR-01, FR-06, FR-17, FR-18 | `DrugSearchBox`, `StatTile`, `LatestAlertsCard`, `EmergingSignalsCard` | `useDrugStore` (search), `useDashboardStore`, `useCabinetStore` | `GET /drugs`, `GET /signals/emerging`, `GET /cabinet`, `GET /cabinet/alerts` |
+| Drug details (Drug 360) | `/drugs/:rxcui` | Guest (follow needs login) | FR-02, FR-03, FR-10, FR-15 | `DrugHeader`, `DosageFormSelect`, `ShortageStatusCard`, `RecallsCard`, `LabelCard`, `ReactionBars`, `TrendChart`, `AlternativesTable` | `useDrugStore` | `GET /drugs/{rxcui}/overview`, `.../reaction-trend`, `GET /shortages/{rxcui}/alternatives`, `POST/DELETE /cabinet/follows` |
+| Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `SignalTabs`, `FilterBar`, `SignalTable`, `PRRBadge`, `LabelGapChip`, `LabelGapsTable`, `ReportsDrawer`, `StatCard`, `AgeBarChart`, `DonutChart`, `TrendChart` | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
+| My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList`, filter chips; `AlertBell` and the count in the navbar | `useCabinetStore`, `useUiStore` | `GET /cabinet`, `DELETE /cabinet/follows/{rxcui}`, `GET /cabinet/alerts`, `DELETE /cabinet/alerts[/{id}]` |
+| Profile and settings | `/profile` | User | FR-13, FR-14 | `ProfileForm`, `PasswordForm`, `AlertSettingsCard` (`ToggleSwitch`), `AccountCard` (log out, delete account) | `useProfileStore`, `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
 
-Routing: `meta.requiresAuth` sends guests to `/auth`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). Views are lazy-loaded.
+Routing: `meta.requiresAuth` sends guests to `/auth?redirect=<page>`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). After logging in, `AuthView` returns to the `redirect` page when it is an internal path (`safeRedirect`). Views are lazy-loaded.
+
+Session: the JWT is kept in `localStorage` (`medsignal.token`). Login returns only a token, so the user comes from `GET /profile`; register logs in right after creating the account. On page load `main.js` calls `useAuthStore().restore()` before installing the router: a stored token that the server rejects is dropped and the page opens as a guest (an invalid token would otherwise make even guest pages answer 401). Any later 401 goes through `handleUnauthorized`, which clears the session and the user-scoped stores and, on a protected page, redirects to `/auth?redirect=<page>`; a 401 from `/auth/login`, `/auth/logout` or `/profile/password` is ignored (wrong password, not an expired session; the list is `FORM_401_PATHS` in `core/constants/auth.js`). Deleting the account ends the session locally (`endSession`, no `/auth/logout`: the server revoked the token) and opens `/auth?deleted=1`. There is no refresh token, so the user logs in again after `JWT_EXPIRE_MINUTES`.
 
 ## 4. Look and charts
 
@@ -97,7 +101,7 @@ Routing: `meta.requiresAuth` sends guests to `/auth`; `meta.guestOnly` sends log
 
 ## 6. Configuration
 
-Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api/v1`) is the base path of the backend. In development Vite proxies `/api` to the API on port 8000; in production Nginx does (`nginx.conf`, upstream `api:8000`; change it to the VM address on the Virtual Lab).
+Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api`) is the base path of the backend. In development Vite proxies `/api` to the API on port 8000; in production Nginx does (`nginx.conf`, upstream `api:8000`; change it to the VM address on the Virtual Lab).
 
 ## 7. Run, test, build
 
@@ -105,7 +109,7 @@ Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api/v1`) is the ba
 npm install
 cp .env.example .env
 npm run dev        # http://localhost:5173 (start the backend first)
-npm test           # 3 tests
+npm test           # unit tests, no network needed
 npm run build      # output in dist/
 ```
 
@@ -113,8 +117,8 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT, mappers, login and register forms, navbar and search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
-- **Placeholders with TODOs:** Dashboard, Drug details, My medicines and Profile content, and the table components (`SignalTable`, `FilterBar`, `AlternativesTable`, `FollowedDrugRow`, `AlertList` and similar).
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  Profile and settings (edit username and email, change password, alert switches with explicit save, log out, delete account with the username typed to confirm), the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
+- **Placeholders with TODOs:** none in the views; the toast from `useUiStore.notify` is stored but not rendered yet.
 
 ## 9. How to add a feature
 

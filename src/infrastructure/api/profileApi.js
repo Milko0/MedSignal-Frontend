@@ -1,10 +1,18 @@
 import { httpClient } from '@/infrastructure/http/httpClient'
+import { fromAlertSettings, toAlertSettings } from '@/infrastructure/mappers/profileMapper'
+import { toUser } from '@/infrastructure/mappers/userMapper'
+
+const none = () => undefined // password change and delete answer 204
 
 export const profileApi = {
-  get: () => httpClient.get('/profile').then((r) => r.data),
-  update: (body) => httpClient.patch('/profile', body).then((r) => r.data),
-  changePassword: (body) => httpClient.post('/profile/password', body).then((r) => r.data),
-  remove: () => httpClient.delete('/profile').then((r) => r.data),
-  getAlertSettings: () => httpClient.get('/profile/alert-settings').then((r) => r.data),
-  saveAlertSettings: (body) => httpClient.put('/profile/alert-settings', body).then((r) => r.data),
+  // FR-14: same UserResponse as register
+  get: () => httpClient.get('/profile').then((r) => toUser(r.data)),
+  update: ({ username, email }) => httpClient.patch('/profile', { username, email }).then((r) => toUser(r.data)),
+  changePassword: ({ currentPassword, newPassword }) =>
+    httpClient.post('/profile/password', { current_password: currentPassword, new_password: newPassword }).then(none),
+  remove: () => httpClient.delete('/profile').then(none),
+  // FR-13: alert settings
+  getAlertSettings: () => httpClient.get('/profile/alert-settings').then((r) => toAlertSettings(r.data)),
+  saveAlertSettings: (settings) =>
+    httpClient.put('/profile/alert-settings', fromAlertSettings(settings)).then((r) => toAlertSettings(r.data)),
 }

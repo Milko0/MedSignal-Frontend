@@ -17,3 +17,4 @@ App-wide configuration and constants.
 | `config/env.js` | API base URL |
 | `constants/disclaimer.js` | NFR-11 text |
 | `constants/status.js` | Status labels and palette tones |
+| `constants/auth.js` | `FORM_401_PATHS`: requests whose 401 is a form error, not a session expiry |

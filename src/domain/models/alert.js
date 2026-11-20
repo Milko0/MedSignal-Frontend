@@ -1,10 +1,9 @@
 /**
  * @typedef {Object} Alert
  * @property {string} id
- * @property {'signal'|'label'|'shortage'|'recall'} type
+ * @property {'SIGNAL'|'LABEL'|'SHORTAGE'|'RECALL'} type
  * @property {string} rxcui
- * @property {string} title
- * @property {string} detail
- * @property {string} createdAt
+ * @property {string} message
+ * @property {string} createdAt   ISO timestamp
  */
 export {}

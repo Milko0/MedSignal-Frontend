@@ -1,8 +1,67 @@
 <script setup>
-// Alternatives while in shortage: match, form, recalls, signal profile, status (FR-10).
-defineProps({ alternatives: Array })
+// FR-10: ranked alternatives while a drug is in shortage: same route and form, not in shortage. A row opens that
+// drug. The backend also lists the drug itself (other products still available); that row is not a link.
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import StatusChip from '@/presentation/components/common/StatusChip.vue'
+import { matchTypeLabel, signalProfileLabel, signalProfileTone } from '@/domain/rules/alternatives'
+
+const props = defineProps({
+  alternatives: { type: Object, required: true },     // Alternatives model
+  currentRxcui: { type: String, default: null },
+})
+
+const router = useRouter()
+const rows = computed(() => props.alternatives.items)
+const isSelf = (a) => a.rxcui === props.currentRxcui
+const target = (a) => ({ name: 'drug', params: { rxcui: a.rxcui } })
+const open = (a) => { if (!isSelf(a)) router.push(target(a)) }
+const same = computed(() => [props.alternatives.targetDosageForm, ...props.alternatives.targetRoutes].filter(Boolean).join(' · '))
 </script>
 
 <template>
-  <div class="card">AlternativesTable (TODO)</div>
+  <div class="alternatives">
+    <p v-if="same" class="muted caption">Same route and form as the drug in shortage: {{ same }}</p>
+
+    <p v-if="!rows.length" class="empty muted">No alternative with the same route and form is available</p>
+
+    <div v-else class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="num">#</th><th>Product</th><th>Match</th><th>Dosage form</th><th>Routes</th>
+            <th class="num">Recalls</th><th>Signal profile</th><th class="num">Available products</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in rows" :key="`${a.rank}-${a.rxcui}`" :class="{ row: !isSelf(a), self: isSelf(a) }" @click="open(a)">
+            <td class="num">{{ a.rank }}</td>
+            <td>
+              <span v-if="isSelf(a)">{{ a.name }} <span class="muted">(this drug, other products)</span></span>
+              <RouterLink v-else :to="target(a)" @click.stop>{{ a.name }}</RouterLink>
+            </td>
+            <td>{{ matchTypeLabel(a.matchType) }}</td>
+            <td>{{ a.dosageForm ?? '–' }}</td>
+            <td>{{ a.routes.length ? a.routes.join(', ') : '–' }}</td>
+            <td class="num">{{ a.recalls }}</td>
+            <td><StatusChip :status="a.signalProfile ?? 'unknown'" :label="signalProfileLabel(a.signalProfile) || 'Unknown'" :tone="signalProfileTone(a.signalProfile)" /></td>
+            <td class="num">{{ a.productsAvailable }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.caption { margin: 0 0 .6rem; font-size: .85rem; }
+.empty { margin: .5rem 0; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: .5rem; border-bottom: 1px solid var(--line); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.row { cursor: pointer; }
+.row:hover { background: var(--teal-soft); }
+.self { background: var(--slate-soft); }
+</style>

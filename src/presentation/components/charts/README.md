@@ -16,7 +16,8 @@ Interactive charts with Plotly.js (hover tooltips, zoom, responsive).
 | Item | Role |
 |---|---|
 | `PlotlyChart.vue` | Generic wrapper: Plotly.react, ResizeObserver, purge on unmount |
-| `ReactionBars.vue` | Most reported reactions (horizontal bars) |
+| `ReactionBars.vue` | Most reported reactions (horizontal bars, `[{ reaction, reports }]`, long names cut with the full text on hover) |
 | `TrendChart.vue` | Monthly trend, unified hover |
 | `DonutChart.vue` | Reports by sex |
 | `AgeBarChart.vue` | Reports by age group |
+| `Sparkline.vue` | Tiny inline SVG trend line (no Plotly), for table rows |

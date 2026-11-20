@@ -1,9 +1,12 @@
 <script setup>
 import { DISCLAIMER } from '@/core/constants/disclaimer'
+
+// `text` is the disclaimer that came with an API response (meta.disclaimer); the constant is the fallback.
+defineProps({ text: { type: String, default: DISCLAIMER } })
 </script>
 
 <template>
-  <p class="disclaimer muted">{{ DISCLAIMER }}</p>
+  <p class="disclaimer muted">{{ text }}</p>
 </template>
 
 <style scoped>
