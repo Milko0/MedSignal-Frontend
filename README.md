@@ -32,13 +32,13 @@ MedSignal-Frontend/
 │   ├── composition/container.js     # Composition root
 │   ├── core/
 │   │   ├── config/env.js            # API base URL
-│   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map)
+│   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map), auth.js (401s that are not a session expiry)
 │   ├── domain/
 │   │   ├── models/                  # user, drug, signal, shortage, label, alert, cabinet, report, statistics, alertSettings, page (JSDoc typedefs)
-│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, relativeTime.js, pivotTrend.js, formatShortage.js, alternatives.js, percent.js, signalFilters.js, statsShaping.js, cabinet.js, authValidation.js, safeRedirect.js
+│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, relativeTime.js, pivotTrend.js, formatShortage.js, alternatives.js, percent.js, signalFilters.js, statsShaping.js, cabinet.js, authValidation.js, safeRedirect.js, alertSettings.js
 │   ├── application/
 │   │   ├── services/                # authService, drugService, signalService, cabinetService, profileService
-│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useDashboardStore, useUiStore
+│   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useProfileStore, useDashboardStore, useUiStore
 │   ├── infrastructure/
 │   │   ├── http/                    # httpClient.js (Axios, token getter, 401 hook), apiError.js, query.js
 │   │   ├── api/                     # authApi, drugsApi, shortagesApi, signalsApi, statisticsApi, cabinetApi, profileApi
@@ -56,6 +56,7 @@ MedSignal-Frontend/
 │       │   ├── signals/             # SignalTabs, FilterBar, SignalTable, PRRBadge, LabelGapChip, LabelGapsTable, ReportsDrawer, StatCard
 │       │   ├── shortages/           # AlternativesTable
 │       │   ├── cabinet/             # FollowedDrugRow, AlertList
+│       │   ├── profile/             # ProfileForm, PasswordForm, AlertSettingsCard, AccountCard
 │       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart, Sparkline
 │       ├── composables/             # useDebouncedSearch.js, useAsyncState.js
 │       └── styles/                  # tokens.css (palette), base.css
@@ -73,11 +74,11 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | Drug details (Drug 360) | `/drugs/:rxcui` | Guest (follow needs login) | FR-02, FR-03, FR-10, FR-15 | `DrugHeader`, `DosageFormSelect`, `ShortageStatusCard`, `RecallsCard`, `LabelCard`, `ReactionBars`, `TrendChart`, `AlternativesTable` | `useDrugStore` | `GET /drugs/{rxcui}/overview`, `.../reaction-trend`, `GET /shortages/{rxcui}/alternatives`, `POST/DELETE /cabinet/follows` |
 | Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `SignalTabs`, `FilterBar`, `SignalTable`, `PRRBadge`, `LabelGapChip`, `LabelGapsTable`, `ReportsDrawer`, `StatCard`, `AgeBarChart`, `DonutChart`, `TrendChart` | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
 | My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList`, filter chips; `AlertBell` and the count in the navbar | `useCabinetStore`, `useUiStore` | `GET /cabinet`, `DELETE /cabinet/follows/{rxcui}`, `GET /cabinet/alerts`, `DELETE /cabinet/alerts[/{id}]` |
-| Profile and settings | `/profile` | User | FR-13, FR-14 | profile form, password form, `ToggleSwitch` alert settings | `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
+| Profile and settings | `/profile` | User | FR-13, FR-14 | `ProfileForm`, `PasswordForm`, `AlertSettingsCard` (`ToggleSwitch`), `AccountCard` (log out, delete account) | `useProfileStore`, `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
 
 Routing: `meta.requiresAuth` sends guests to `/auth?redirect=<page>`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). After logging in, `AuthView` returns to the `redirect` page when it is an internal path (`safeRedirect`). Views are lazy-loaded.
 
-Session: the JWT is kept in `localStorage` (`medsignal.token`). Login returns only a token, so the user comes from `GET /profile`; register logs in right after creating the account. On page load `main.js` calls `useAuthStore().restore()` before installing the router: a stored token that the server rejects is dropped and the page opens as a guest (an invalid token would otherwise make even guest pages answer 401). Any later 401 goes through `handleUnauthorized`, which clears the session and the user-scoped stores and, on a protected page, redirects to `/auth?redirect=<page>`; a 401 from `/auth/login` or `/auth/logout` is ignored (wrong password, not an expired session). There is no refresh token, so the user logs in again after `JWT_EXPIRE_MINUTES`.
+Session: the JWT is kept in `localStorage` (`medsignal.token`). Login returns only a token, so the user comes from `GET /profile`; register logs in right after creating the account. On page load `main.js` calls `useAuthStore().restore()` before installing the router: a stored token that the server rejects is dropped and the page opens as a guest (an invalid token would otherwise make even guest pages answer 401). Any later 401 goes through `handleUnauthorized`, which clears the session and the user-scoped stores and, on a protected page, redirects to `/auth?redirect=<page>`; a 401 from `/auth/login`, `/auth/logout` or `/profile/password` is ignored (wrong password, not an expired session; the list is `FORM_401_PATHS` in `core/constants/auth.js`). Deleting the account ends the session locally (`endSession`, no `/auth/logout`: the server revoked the token) and opens `/auth?deleted=1`. There is no refresh token, so the user logs in again after `JWT_EXPIRE_MINUTES`.
 
 ## 4. Look and charts
 
@@ -116,8 +117,8 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
-- **Placeholders with TODOs:** Profile content.
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  Profile and settings (edit username and email, change password, alert switches with explicit save, log out, delete account with the username typed to confirm), the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
+- **Placeholders with TODOs:** none in the views; the toast from `useUiStore.notify` is stored but not rendered yet (Phase 8).
 
 ## 9. How to add a feature
 

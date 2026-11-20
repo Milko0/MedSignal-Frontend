@@ -18,4 +18,4 @@ Services (use-case logic) and Pinia stores (UI state).
 | Item | Role |
 |---|---|
 | `services/` | auth, drug, signal, cabinet, profile |
-| `stores/` | useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useDashboardStore, useUiStore |
+| `stores/` | useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useProfileStore, useDashboardStore, useUiStore |
