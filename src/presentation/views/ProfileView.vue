@@ -2,6 +2,7 @@
 // View 6 - Profile and settings (FR-13, FR-14). One page; the menu on the left jumps to the sections.
 import { useAuthStore } from '@/application/stores/useAuthStore'
 import ProfileForm from '@/presentation/components/profile/ProfileForm.vue'
+import PasswordForm from '@/presentation/components/profile/PasswordForm.vue'
 
 const auth = useAuthStore()
 </script>
@@ -20,7 +21,10 @@ const auth = useAuthStore()
         Could not load your profile.
         <button type="button" class="link" @click="auth.restore()">Retry</button>
       </section>
-      <section v-else id="profile" aria-label="Profile"><ProfileForm /></section>
+      <section v-else id="profile" class="stack" aria-label="Profile">
+        <ProfileForm />
+        <PasswordForm />
+      </section>
     </div>
   </div>
 </template>
@@ -31,6 +35,7 @@ const auth = useAuthStore()
 .menu a { padding: .45rem .75rem; border-radius: 8px; color: var(--ink); }
 .menu a:hover { background: var(--teal-soft); color: var(--teal); }
 .sections { display: grid; gap: 1rem; min-width: 0; }
+.stack { display: grid; gap: 1rem; }
 .sections section { scroll-margin-top: 1rem; }
 .error { color: var(--coral); }
 .link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }

@@ -131,3 +131,71 @@ describe('profile card', () => {
     expect(input(w, 'Username').element.value).toBe('p7_test_user')
   })
 })
+
+describe('password card', () => {
+  const open = async (w) => {
+    await w.findAll('button').find((b) => b.text() === 'Change password').trigger('click')
+  }
+  const pw = (w, label) => w.find(`#${w.findAll('label').find((l) => l.text() === label).attributes('for')}`)
+  const fill = async (w, current, next, confirm = next) => {
+    await pw(w, 'Current password').setValue(current)
+    await pw(w, 'New password').setValue(next)
+    await pw(w, 'Confirm new password').setValue(confirm)
+  }
+  const send = async (w) => {
+    await w.find('form[aria-label="Change password"]').trigger('submit')
+    await flushPromises()
+  }
+
+  it('is closed until "Change password" is clicked and can be cancelled', async () => {
+    const w = await show()
+    expect(w.find('form[aria-label="Change password"]').exists()).toBe(false)
+    await open(w)
+    expect(w.find('form[aria-label="Change password"]').exists()).toBe(true)
+    await w.findAll('button').find((b) => b.text() === 'Cancel').trigger('click')
+    expect(w.find('form[aria-label="Change password"]').exists()).toBe(false)
+  })
+
+  it('does not send a mismatching or short password', async () => {
+    const w = await show()
+    await open(w)
+    await fill(w, 'old-secret', 'new-secret-1', 'new-secret-2')
+    await send(w)
+    expect(w.text()).toContain('The two passwords do not match')
+
+    await fill(w, 'old-secret', 'short')
+    await send(w)
+    expect(w.text()).toContain('at least 8 characters')
+    expect(services.profile.changePassword).not.toHaveBeenCalled()
+  })
+
+  it('a wrong current password shows under that field and the user stays logged in', async () => {
+    services.profile.changePassword.mockRejectedValue(failure(401, 'Current password is wrong'))
+    const w = await show()
+    await open(w)
+    await fill(w, 'wrong-secret', 'new-secret-1')
+    await send(w)
+
+    const current = pw(w, 'Current password')
+    expect(current.attributes('aria-invalid')).toBe('true')
+    expect(w.find('#' + current.attributes('aria-describedby')).text()).toBe('Current password is wrong')
+    expect(useAuthStore().loggedIn).toBe(true)
+    expect(w.find('form[aria-label="Change password"]').exists()).toBe(true)
+  })
+
+  it('sends the passwords, then closes, empties the form and confirms', async () => {
+    services.profile.changePassword.mockResolvedValue(undefined)
+    const w = await show()
+    await open(w)
+    await fill(w, 'old-secret', 'new-secret-1')
+    await send(w)
+
+    expect(services.profile.changePassword).toHaveBeenCalledWith({ currentPassword: 'old-secret', newPassword: 'new-secret-1' })
+    expect(w.find('form[aria-label="Change password"]').exists()).toBe(false)
+    expect(w.text()).toContain('Password changed.')
+
+    await open(w)
+    expect(pw(w, 'New password').element.value).toBe('')
+    expect(w.text()).not.toContain('Password changed.')
+  })
+})

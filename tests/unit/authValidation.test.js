@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  hasErrors, mapAuthError, mapProfileError, profileChanges, validateLogin, validateProfile, validateRegister,
+  hasErrors, mapAuthError, mapProfileError, profileChanges, validateLogin, validatePasswordChange, validateProfile, validateRegister,
 } from '@/domain/rules/authValidation'
 
 const good = { username: 'p2_test_user', email: 'p2_test_user@example.com', password: 'secret123' }
@@ -146,5 +146,59 @@ describe('mapProfileError (profile)', () => {
   it('shows network and server errors as a banner', () => {
     expect(mapProfileError({ status: 0, message: 'Cannot reach the server.' }, 'profile').banner).toMatch(/cannot reach/i)
     expect(mapProfileError(undefined, 'profile').banner).toBe('Something went wrong. Please try again.')
+  })
+})
+
+describe('validatePasswordChange', () => {
+  const good = { currentPassword: 'old-secret', newPassword: 'new-secret-1', confirmPassword: 'new-secret-1' }
+
+  it('accepts a valid form', () => {
+    expect(validatePasswordChange(good)).toEqual({})
+  })
+
+  it('needs the current password', () => {
+    expect(validatePasswordChange({ ...good, currentPassword: '' }).currentPassword).toBeDefined()
+  })
+
+  it('the new password needs at least 8 characters, the current one is not checked for length', () => {
+    expect(validatePasswordChange({ currentPassword: 'x', newPassword: '1234567', confirmPassword: '1234567' }).newPassword).toMatch(/8/)
+    expect(validatePasswordChange({ ...good, currentPassword: 'x' })).toEqual({})
+  })
+
+  it('the new password must differ from the current one', () => {
+    const same = { currentPassword: 'same-secret', newPassword: 'same-secret', confirmPassword: 'same-secret' }
+    expect(validatePasswordChange(same).newPassword).toMatch(/different/)
+  })
+
+  it('the confirmation must match', () => {
+    expect(validatePasswordChange({ ...good, confirmPassword: 'new-secret-2' }).confirmPassword).toMatch(/do not match/)
+    expect(validatePasswordChange({ ...good, confirmPassword: '' }).confirmPassword).toBeDefined()
+  })
+
+  it('does not also complain about the confirmation while the new password itself is wrong', () => {
+    const errors = validatePasswordChange({ currentPassword: 'x', newPassword: 'short', confirmPassword: 'other' })
+    expect(Object.keys(errors)).toEqual(['newPassword'])
+  })
+
+  it('reports an empty current and new password at once', () => {
+    expect(Object.keys(validatePasswordChange({ currentPassword: '', newPassword: '', confirmPassword: '' })))
+      .toEqual(['currentPassword', 'newPassword'])
+  })
+})
+
+describe('mapProfileError (password)', () => {
+  it('a wrong current password (401) shows under the current-password field, not as a banner', () => {
+    expect(mapProfileError({ status: 401, message: 'Current password is wrong' }, 'password'))
+      .toEqual({ fields: { currentPassword: 'Current password is wrong' }, banner: '' })
+  })
+
+  it('maps the backend field names to the form fields', () => {
+    const error = { status: 422, message: 'x', fieldErrors: { new_password: 'too short', current_password: 'required' } }
+    expect(mapProfileError(error, 'password').fields).toEqual({ newPassword: 'too short', currentPassword: 'required' })
+  })
+
+  it('a 401 on the profile form is not special (the session handler deals with it)', () => {
+    expect(mapProfileError({ status: 401, message: 'Not authenticated' }, 'profile'))
+      .toEqual({ fields: {}, banner: 'Not authenticated' })
   })
 })
