@@ -18,7 +18,7 @@ The frontend mirrors the backend's clean architecture. Dependencies point inward
 | Core | `src/core` | API base URL, constants (disclaimer, status palette) | - | - |
 
 `src/composition/container.js` is the **composition root**: the only file that wires the concrete API adapters into the services.
-Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters call the mappers, which convert the API's snake_case JSON into camelCase domain models, so everything above infrastructure sees only models. Failed requests reject with one `ApiError { status, message, fieldErrors }`.
+Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters call the mappers, which convert the API's snake_case JSON into camelCase domain models, so everything above infrastructure sees only models. Failed requests reject with one `ApiError { status, message, fieldErrors, url }`.
 
 ## 2. Folder structure
 
@@ -27,7 +27,7 @@ MedSignal-Frontend/
 ├── index.html  vite.config.js  jsconfig.json  package.json  .env.example
 ├── Dockerfile  nginx.conf
 ├── src/
-│   ├── main.js                      # Creates the app, Pinia and the router
+│   ├── main.js                      # Creates the app and Pinia, plugs in the 401 handler, restores the session, then installs the router
 │   ├── App.vue
 │   ├── composition/container.js     # Composition root
 │   ├── core/
@@ -35,7 +35,7 @@ MedSignal-Frontend/
 │   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map)
 │   ├── domain/
 │   │   ├── models/                  # user, drug, signal, shortage, label, alert, cabinet, report, statistics, alertSettings, page (JSDoc typedefs)
-│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js
+│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js, authValidation.js, safeRedirect.js
 │   ├── application/
 │   │   ├── services/                # authService, drugService, signalService, cabinetService, profileService
 │   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useUiStore
@@ -74,7 +74,9 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList` | `useCabinetStore` | `GET /cabinet`, `GET/DELETE /cabinet/alerts` |
 | Profile and settings | `/profile` | User | FR-13, FR-14 | profile form, password form, `ToggleSwitch` alert settings | `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
 
-Routing: `meta.requiresAuth` sends guests to `/auth`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). Views are lazy-loaded.
+Routing: `meta.requiresAuth` sends guests to `/auth?redirect=<page>`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). After logging in, `AuthView` returns to the `redirect` page when it is an internal path (`safeRedirect`). Views are lazy-loaded.
+
+Session: the JWT is kept in `localStorage` (`medsignal.token`). Login returns only a token, so the user comes from `GET /profile`; register logs in right after creating the account. On page load `main.js` calls `useAuthStore().restore()` before installing the router: a stored token that the server rejects is dropped and the page opens as a guest (an invalid token would otherwise make even guest pages answer 401). Any later 401 goes through `handleUnauthorized`, which clears the session and the user-scoped stores and, on a protected page, redirects to `/auth?redirect=<page>`; a 401 from `/auth/login` or `/auth/logout` is ignored (wrong password, not an expired session). There is no refresh token, so the user logs in again after `JWT_EXPIRE_MINUTES`.
 
 ## 4. Look and charts
 
@@ -113,7 +115,7 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register forms, navbar and search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
 - **Placeholders with TODOs:** Dashboard, Drug details, My medicines and Profile content, and the table components (`SignalTable`, `FilterBar`, `AlternativesTable`, `FollowedDrugRow`, `AlertList` and similar).
 
 ## 9. How to add a feature
