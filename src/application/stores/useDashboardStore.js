@@ -54,14 +54,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const alertCount = computed(() => (unknown(alertsError.value, cabinet.alerts) ? null : cabinet.alerts.length))
   const emergingCount = computed(() => emerging.value?.total ?? null)
 
-  // Alerts only carry the rxcui; followed drugs are the only ones that get alerts, so the name comes from there.
-  const latestAlerts = computed(() => {
-    const names = new Map(cabinet.followed.map((d) => [d.rxcui, d.name]))
-    return [...cabinet.alerts]
-      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
-      .slice(0, LATEST_ALERTS)
-      .map((a) => ({ ...a, drugName: names.get(a.rxcui) ?? a.rxcui }))
-  })
+  // The newest alerts, each with its drug's name (resolved by the cabinet store)
+  const latestAlerts = computed(() => cabinet.namedAlerts.slice(0, LATEST_ALERTS))
 
   return {
     emerging, emergingLoading, emergingError, followedLoading, followedError, alertsLoading, alertsError,
