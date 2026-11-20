@@ -1,11 +1,20 @@
 /**
  * @typedef {Object} Alternative
+ * @property {'SAME_INGREDIENT'|'SAME_CLASS'} matchType
  * @property {string} rxcui
- * @property {string} product
- * @property {string} match
- * @property {string} dosageForm
+ * @property {string} name
+ * @property {string|null} dosageForm
+ * @property {string[]} routes
  * @property {number} recalls
- * @property {'low'|'moderate'|'high'} signalProfile
- * @property {'available'|'in_shortage'} status
+ * @property {'LOW'|'MODERATE'|'HIGH'} signalProfile
+ * @property {number} productsAvailable
+ * @property {number} rank
+ */
+
+/**
+ * @typedef {Object} Alternatives
+ * @property {string|null} targetDosageForm
+ * @property {string[]} targetRoutes
+ * @property {Alternative[]} items
  */
 export {}
