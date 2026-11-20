@@ -30,7 +30,7 @@ Frontend tests.
 | `unit/apiAdapters.test.js` | URL, params, body and returned model of every API adapter |
 | `unit/authService.test.js` | Login / register / logout through the session port |
 | `unit/mappers/*.test.js` | DTO to model mappers |
-| `unit/stores/useDrugStore.test.js` | Drug store with mocked services |
+| `unit/stores/useDrugStore.detail.test.js` | Drug 360 store: load order, alternatives only in shortage, 404, per-section failures, dosage form, route change, optimistic follow with rollback |
 | `unit/stores/useDrugStore.search.test.js` | Search: stale answers dropped, < 2 characters sends nothing, error state |
 | `unit/stores/useDashboardStore.test.js` | Guest loads only emerging; user loads all three; one failure keeps the others; tile counts; latest alerts |
 | `unit/relativeTime.test.js` | Minute / hour / yesterday / day / date boundaries |
@@ -38,3 +38,6 @@ Frontend tests.
 | `components/DashboardView.test.js` | Guest and user dashboard, quarter title, disclaimer, error and Retry |
 | `components/Sparkline.test.js` | Path for n values, nothing for empty |
 | `components/StatusChip.test.js` | Chip label and tone, disclaimer footer text |
+| `unit/pivotTrend.test.js`, `unit/formatShortage.test.js` | Trend pivot, shortage text, alternatives labels |
+| `components/DrugHeader.test.js`, `components/DrugCards.test.js` | Header (guest login link, Follow/Following), shortage / recalls / label cards, dosage-form select, percent, chip overrides |
+| `components/AlternativesTable.test.js`, `components/DrugDetailView.test.js` | Ranked rows and empty state; the whole Drug 360 page with its states |

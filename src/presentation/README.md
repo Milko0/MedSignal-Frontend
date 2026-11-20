@@ -12,6 +12,7 @@ Vue views, layouts, components, router and styles for the 6 mock-up views.
 
 - Reads state from stores; never calls Axios directly.
 - Every screen with signals or statistics shows `DisclaimerFooter` (NFR-11). The view renders it, with the `meta.disclaimer` of its response when it has one; `AppLayout` does not.
+- `DrugDetailView` loads the overview first; the trend and the alternatives then load and fail on their own (own Retry). Another `rxcui` in the URL reloads the page. Follow is optimistic and rolls back when the server refuses.
 - `DrugSearchBox` keeps its results in `useDrugStore` but shows them only for the text typed in that box, so the navbar and the dashboard boxes never show each other's dropdown.
 - Palette: teal actions, amber shortage, coral safety signals, green available.
 
