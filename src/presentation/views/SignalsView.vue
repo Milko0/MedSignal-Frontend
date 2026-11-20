@@ -4,6 +4,7 @@
 import AgeBarChart from '@/presentation/components/charts/AgeBarChart.vue'
 import DonutChart from '@/presentation/components/charts/DonutChart.vue'
 import TrendChart from '@/presentation/components/charts/TrendChart.vue'
+import DisclaimerFooter from '@/presentation/components/common/DisclaimerFooter.vue'
 
 const age = { '0-17': 8000, '18-44': 21000, '45-64': 30000, '65-74': 23500, '75+': 18500 }
 const sex = { Female: 58, Male: 39, Unknown: 3 }
@@ -22,4 +23,5 @@ const serious = [
     <section class="card"><h3>Reports by sex (sample)</h3><DonutChart :values="sex" /></section>
     <section class="card"><h3>Serious reports over time (sample)</h3><TrendChart :series="serious" /></section>
   </div>
+  <DisclaimerFooter />
 </template>
