@@ -237,3 +237,48 @@ describe('DrugSearchBox', () => {
     expect(b.find('[role="listbox"]').exists()).toBe(false)
   })
 })
+
+describe('DrugSearchBox as a picker', () => {
+  it('emits the chosen drug instead of navigating, and empties the box', async () => {
+    services.drug.search.mockResolvedValue([ibuprofen, ibandronate])
+    const w = show({ picker: true })
+    await type(w, 'ibu')
+
+    await w.findAll('[role="option"]')[1].trigger('click')
+
+    expect(w.emitted('select')).toEqual([[{ rxcui: '29', name: 'ibandronate' }]])
+    expect(push).not.toHaveBeenCalled()
+    expect(w.find('input').element.value).toBe('')
+  })
+
+  it('emits the top result on Enter', async () => {
+    services.drug.search.mockResolvedValue([ibuprofen])
+    const w = show({ picker: true })
+    await type(w, 'ibuprofn')
+
+    await w.find('input').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(w.emitted('select')).toEqual([[{ rxcui: '5640', name: 'ibuprofen' }]])
+    expect(push).not.toHaveBeenCalled()
+  })
+
+  it('has no Search button and no example chips', () => {
+    const w = show({ picker: true })
+
+    expect(w.find('button[type="submit"]').exists()).toBe(false)
+    expect(w.find('.chip').exists()).toBe(false)
+    expect(w.find('input').attributes('placeholder')).toBe('Search a drug')
+  })
+
+  it('does not emit select in the normal mode', async () => {
+    services.drug.search.mockResolvedValue([ibuprofen])
+    const w = show()
+    await type(w, 'ibu')
+
+    await w.findAll('[role="option"]')[0].trigger('click')
+
+    expect(w.emitted('select')).toBeUndefined()
+    expect(push).toHaveBeenCalledOnce()
+  })
+})

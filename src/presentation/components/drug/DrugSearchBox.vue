@@ -7,7 +7,10 @@ import { useRouter } from 'vue-router'
 import { useDrugStore } from '@/application/stores/useDrugStore'
 import { MIN_SEARCH_LENGTH, useDebouncedSearch } from '@/presentation/composables/useDebouncedSearch'
 
-const props = defineProps({ compact: Boolean })
+// `picker`: choose a drug for a filter instead of opening it. Selecting emits `select` ({ rxcui, name }) and stays on
+// the page; there is no Search button and no example chips.
+const props = defineProps({ compact: Boolean, picker: Boolean })
+const emit = defineEmits(['select'])
 const router = useRouter()
 const drugs = useDrugStore()
 
@@ -41,7 +44,8 @@ function choose(drug) {
   active.value = -1
   cancel()
   query.value = ''
-  router.push({ name: 'drug', params: { rxcui: drug.rxcui } })
+  if (props.picker) emit('select', { rxcui: drug.rxcui, name: drug.name })
+  else router.push({ name: 'drug', params: { rxcui: drug.rxcui } })
 }
 
 // Enter / Search button: the highlighted result, otherwise the top one. When the answer is still on its way (debounce
@@ -97,12 +101,12 @@ function onFocusOut(e) {
         :aria-expanded="showPanel"
         :aria-controls="listId"
         :aria-activedescendant="active >= 0 ? `${listId}-${active}` : undefined"
-        :placeholder="props.compact ? 'Search drugs' : 'Search by generic or brand name. Misspellings are fine.'"
+        :placeholder="props.picker ? 'Search a drug' : props.compact ? 'Search drugs' : 'Search by generic or brand name. Misspellings are fine.'"
         @input="onInput"
         @focus="open = true"
         @keydown="onKeydown"
       />
-      <button v-if="!props.compact" class="btn" type="submit">Search</button>
+      <button v-if="!props.compact && !props.picker" class="btn" type="submit">Search</button>
     </form>
 
     <div v-if="showPanel" :id="listId" class="panel" role="listbox" aria-label="Matching drugs">
@@ -129,7 +133,7 @@ function onFocusOut(e) {
     </div>
     </div>
 
-    <p v-if="!props.compact" class="try muted">
+    <p v-if="!props.compact && !props.picker" class="try muted">
       Try:
       <button v-for="word in SUGGESTIONS" :key="word" type="button" class="chip" @click="useSuggestion(word)">{{ word }}</button>
     </p>
