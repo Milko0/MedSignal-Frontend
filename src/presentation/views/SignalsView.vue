@@ -5,11 +5,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSignalStore } from '@/application/stores/useSignalStore'
-import { defaultFilters, describeEmpty, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
+import { defaultFilters, describeEmpty, effectiveMinReports, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
 import { formatPercent } from '@/domain/rules/percent'
 import FilterBar from '@/presentation/components/signals/FilterBar.vue'
 import SignalTabs from '@/presentation/components/signals/SignalTabs.vue'
 import SignalTable from '@/presentation/components/signals/SignalTable.vue'
+import LabelGapsTable from '@/presentation/components/signals/LabelGapsTable.vue'
 import AgeBarChart from '@/presentation/components/charts/AgeBarChart.vue'
 import DonutChart from '@/presentation/components/charts/DonutChart.vue'
 import TrendChart from '@/presentation/components/charts/TrendChart.vue'
@@ -46,6 +47,7 @@ const goToPage = (page) => go({ ...signals.filters, page })
 
 const emptyMessage = computed(() => describeEmpty(signals.filters, signals.usedQuarter))
 const isList = computed(() => signals.filters.tab !== 'gaps')
+const minReports = computed(() => effectiveMinReports(signals.filters))
 
 const age = { '0-17': 8000, '18-44': 21000, '45-64': 30000, '65-74': 23500, '75+': 18500 }
 const sex = { Female: 58, Male: 39, Unknown: 3 }
@@ -93,6 +95,22 @@ const serious = [
     </template>
   </section>
 
+  <section v-else class="card results" aria-label="Label gaps">
+    <p v-if="signals.needsDrug" class="muted">Choose a drug to see its label gaps.</p>
+    <p v-else-if="signals.tableError" class="error" role="alert">
+      Could not load the label gaps.
+      <button type="button" class="link" @click="signals.loadTable()">Retry</button>
+    </p>
+    <p v-else-if="signals.tableLoading && !signals.labelGaps" class="muted" role="status">Loading…</p>
+    <template v-else-if="signals.labelGaps">
+      <h2 class="gaps-title">
+        Label gaps for
+        <RouterLink :to="{ name: 'drug', params: { rxcui: signals.filters.rxcui } }">{{ signals.drugName ?? `RxCUI ${signals.filters.rxcui}` }}</RouterLink>
+      </h2>
+      <LabelGapsTable :data="signals.labelGaps" :min-reports="minReports" />
+    </template>
+  </section>
+
   <div class="grid two">
     <section class="card"><h3>Reports by age group (sample)</h3><AgeBarChart :groups="age" /></section>
     <section class="card"><h3>Reports by sex (sample)</h3><DonutChart :values="sex" /></section>
@@ -105,6 +123,7 @@ const serious = [
 .tabs { margin: 1rem 0 .75rem; }
 .summary { margin: .75rem 0; font-size: .88rem; }
 .results { margin-bottom: 1rem; }
+.gaps-title { font-size: 1.05rem; margin: 0 0 .5rem; }
 .error { color: var(--coral); }
 .link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
 </style>

@@ -266,3 +266,76 @@ describe('SignalsView: the table', () => {
   })
 })
 
+describe('SignalsView: Emerging and Label gaps tabs', () => {
+  it('Emerging: shows the same kind of table from /signals/emerging, with the quarter of the response', async () => {
+    services.signal.emerging.mockResolvedValue(list({ quarter: '2026Q3', total: 1630 }))
+    const w = await open('/signals?tab=emerging')
+
+    expect(w.findAll('tbody tr')).toHaveLength(1)
+    expect(w.find('.summary').text()).toContain('Quarter: 2026Q3 (latest)')
+    expect(w.find('.summary').text()).toContain('1630 pairs')
+  })
+
+  it('Emerging: names emerging signals and the minimum of 3 when there are none', async () => {
+    services.signal.emerging.mockResolvedValue(list({ items: [], total: 0, total_pages: 0 }))
+    const w = await open('/signals?tab=emerging')
+
+    expect(w.find('.results').text()).toBe('No emerging signals in 2026Q3 with at least 3 reports.')
+  })
+
+  it('Label gaps without a drug: asks to choose one and sends no request', async () => {
+    const w = await open('/signals?tab=gaps')
+
+    expect(w.find('.results').text()).toBe('Choose a drug to see its label gaps.')
+    expect(services.drug.getLabelGaps).not.toHaveBeenCalled()
+    expect(services.signal.list).not.toHaveBeenCalled()
+    expect(w.find('.picker-stub').exists()).toBe(true)
+  })
+
+  it('Label gaps with a drug: asks /drugs/{rxcui}/label-gaps and shows the table under the drug name', async () => {
+    const w = await open('/signals?tab=gaps&rxcui=5640&drug=IBUPROFEN&min=5')
+
+    expect(services.drug.getLabelGaps).toHaveBeenCalledWith('5640', 5)
+    expect(w.find('.gaps-title').text()).toBe('Label gaps for IBUPROFEN')
+    expect(JSON.parse(w.find('.gaps-title a').attributes('data-to'))).toEqual({ name: 'drug', params: { rxcui: '5640' } })
+    expect(w.findAll('tbody tr')).toHaveLength(2)
+    expect(w.find('.summary').exists()).toBe(false)
+  })
+
+  it('Label gaps: picking a drug in the filter and applying loads its gaps', async () => {
+    const w = await open('/signals?tab=gaps')
+
+    w.findComponent('.picker-stub').vm.$emit('select', { rxcui: '700810', name: 'LISDEXAMFETAMINE' })
+    await flushPromises()
+    await apply(w)
+
+    expect(router.currentRoute.value.query).toEqual({ tab: 'gaps', rxcui: '700810', drug: 'LISDEXAMFETAMINE' })
+    expect(services.drug.getLabelGaps).toHaveBeenCalledWith('700810', 20)
+  })
+
+  it('Label gaps: shows the OTC-only message', async () => {
+    services.drug.getLabelGaps.mockResolvedValue({ ...toLabelGaps({ ...labelGapsData, comparable: false, gaps: [] }), disclaimer: DISCLAIMER_TEXT })
+    const w = await open('/signals?tab=gaps&rxcui=5640')
+
+    expect(w.find('.results').text()).toContain('Only OTC labels exist, which have no adverse reactions section')
+  })
+
+  it('Label gaps: shows an error with Retry', async () => {
+    services.drug.getLabelGaps.mockRejectedValueOnce(Object.assign(new Error('boom'), { status: 404 }))
+    const w = await open('/signals?tab=gaps&rxcui=5640')
+    expect(w.find('[role="alert"]').text()).toContain('Could not load the label gaps.')
+
+    await w.find('[role="alert"] button').trigger('click')
+    await flushPromises()
+
+    expect(w.findAll('tbody tr')).toHaveLength(2)
+  })
+
+  it('Label gaps: shows the disclaimer of the label-gaps response', async () => {
+    services.drug.getLabelGaps.mockResolvedValue({ ...toLabelGaps(labelGapsData), disclaimer: 'Gap disclaimer.' })
+    const w = await open('/signals?tab=gaps&rxcui=5640')
+
+    expect(w.find('.disclaimer').text()).toBe('Gap disclaimer.')
+  })
+})
+
