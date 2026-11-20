@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { services } from '@/composition/container'
-import { defaultFilters, effectiveMinReports, filtersFromQuery } from '@/domain/rules/signalFilters'
-import { quartersFromBuckets } from '@/domain/rules/statsShaping'
+import { defaultFilters, effectiveMinReports, filterApplies, filtersFromQuery } from '@/domain/rules/signalFilters'
+import { ageGroups, lastQuarters, quartersFromBuckets, seriousSeries, sexShares } from '@/domain/rules/statsShaping'
+
+const SERIES_QUARTERS = 6   // quarters on the "serious over time" chart
 
 // Signal explorer (FR-04 to FR-09). The URL is the source of truth for the filters: the view reads route.query into
 // the store (`applyQuery`) and writes changes back with router.replace, so links and back/forward just work.
@@ -30,6 +32,15 @@ export const useSignalStore = defineStore('signal', () => {
   })
   const reportsDrawer = ref(emptyDrawer())
 
+  // FR-08: statistics charts. They describe what the table shows (same drug and quarter), each one loads and fails alone.
+  const stats = ref({ age: null, sex: null, seriousOverTime: null })    // shaped for the charts; null = not loaded
+  const statsLoading = ref({ age: false, sex: false, seriousOverTime: false })
+  const statsError = ref({ age: null, sex: null, seriousOverTime: null })
+  const statsScope = ref({ rxcui: null, quarter: null })                 // what the charts currently describe
+
+  let quartersPromise = null
+  let statsKey = null
+  let statsTicket = 0
   let tableTicket = 0                 // only the answer of the latest request is applied
   let drawerTicket = 0
 
@@ -50,6 +61,74 @@ export const useSignalStore = defineStore('signal', () => {
     } catch (e) {
       quartersError.value = e
     }
+  }
+
+  // Once per session; tried again later if it failed (the quarter select and the chart scope depend on it).
+  function ensureQuarters() {
+    if (!quartersPromise) quartersPromise = loadQuarters().then(() => { if (quartersError.value) quartersPromise = null })
+    return quartersPromise
+  }
+
+  // The charts describe the table: same drug (tabs that use one) and the same quarter (the latest when none is chosen).
+  function currentScope() {
+    const f = filters.value
+    return {
+      rxcui: filterApplies(f.tab, 'drug') ? f.rxcui : null,
+      quarter: filterApplies(f.tab, 'quarter') ? (f.quarter ?? quarters.value[0] ?? null) : null,
+    }
+  }
+
+  async function track(name, work) {
+    statsLoading.value[name] = true
+    statsError.value[name] = null
+    try {
+      return await work()
+    } catch (e) {
+      statsError.value[name] = e
+      throw e
+    } finally {
+      statsLoading.value[name] = false
+    }
+  }
+
+  // age + sex in one request each, serious-over-time as: reports per quarter, then SERIOUS per quarter for the last 6
+  // (backend request B4: there is no single call for it). A quarter that fails leaves a gap in the line, not a 0.
+  async function loadStats() {
+    const ticket = ++statsTicket
+    const scope = currentScope()
+    statsScope.value = scope
+    statsKey = JSON.stringify(scope)
+    const mine = () => ticket === statsTicket
+    const stat = (extra) => services.signal.statistics({ rxcui: scope.rxcui, ...extra })
+
+    const age = track('age', async () => {
+      const result = ageGroups((await stat({ groupBy: 'age_group', quarter: scope.quarter })).buckets)
+      if (mine()) stats.value.age = result
+    })
+    const sex = track('sex', async () => {
+      const result = sexShares((await stat({ groupBy: 'sex', quarter: scope.quarter })).buckets)
+      if (mine()) stats.value.sex = result
+    })
+    const serious = track('seriousOverTime', async () => {
+      const all = (await stat({ groupBy: 'quarter' })).buckets
+      const asked = lastQuarters(all, SERIES_QUARTERS)
+      const answers = await Promise.allSettled(asked.map((quarter) => stat({ groupBy: 'seriousness', quarter })))
+      const seriousByQuarter = {}
+      answers.forEach((a, i) => {
+        if (a.status !== 'fulfilled') return
+        const bucket = a.value.buckets.find((x) => x.group === 'SERIOUS')
+        seriousByQuarter[asked[i]] = bucket ? bucket.value : 0
+      })
+      if (asked.length && !Object.keys(seriousByQuarter).length) throw answers[0].reason   // every quarter failed
+      if (mine()) stats.value.seriousOverTime = seriousSeries(all, seriousByQuarter, SERIES_QUARTERS)
+    })
+    await Promise.allSettled([age, sex, serious])
+  }
+
+  // Reload the charts only when what they describe (drug, quarter) changed; paging or sorting does not.
+  async function refreshStats() {
+    await ensureQuarters()
+    if (JSON.stringify(currentScope()) !== statsKey) await loadStats()
   }
 
   // One request per tab: all -> GET /signals, emerging -> GET /signals/emerging, gaps -> GET /drugs/{rxcui}/label-gaps.
@@ -133,11 +212,11 @@ export const useSignalStore = defineStore('signal', () => {
   async function applyQuery(query) {
     filters.value = filtersFromQuery(query)
     closeReports()                    // the rows the drawer belonged to are gone
-    await loadTable()
+    await Promise.all([loadTable(), refreshStats()])
   }
 
   return {
     filters, list, labelGaps, usedQuarter, matchCoverage, disclaimer, tableLoading, tableError, quarters, quartersError,
-    needsDrug, drugName, reportsDrawer, loadQuarters, loadTable, applyQuery, openReports, loadReportsPage, closeReports,
+    needsDrug, drugName, reportsDrawer, stats, statsLoading, statsError, statsScope, loadQuarters, ensureQuarters, loadStats, loadTable, applyQuery, openReports, loadReportsPage, closeReports,
   }
 })

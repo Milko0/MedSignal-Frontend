@@ -19,7 +19,10 @@ const SignalsView = (await import('@/presentation/views/SignalsView.vue')).defau
 const stubs = {
   RouterLink: { props: ['to'], template: '<a class="link" :data-to="JSON.stringify(to)"><slot /></a>' },
   DrugSearchBox: { emits: ['select'], template: '<div class="picker-stub" />' },
-  AgeBarChart: true, DonutChart: true, TrendChart: true,
+  // Plotly needs a real canvas; the stubs show what the view handed to each chart.
+  AgeBarChart: { props: ['groups'], template: '<div class="age-chart" :data-groups="JSON.stringify(groups)" />' },
+  DonutChart: { props: ['values'], template: '<div class="sex-chart" :data-values="JSON.stringify(values)" />' },
+  TrendChart: { props: ['series'], template: '<div class="serious-chart" :data-series="JSON.stringify(series)" />' },
 }
 
 let pinia, router
@@ -394,6 +397,107 @@ describe('SignalsView: reports drawer', () => {
     await flushPromises()
 
     expect(w.find('.panel .state').text()).toContain('its name contains a "/"')
+  })
+})
+
+describe('SignalsView: statistics charts', () => {
+  const stat = (group_by, buckets) => toStatistics({ group_by, buckets })
+  const QUARTER_BUCKETS = [{ group: '2026Q2', value: 22608 }, { group: '2026Q3', value: 19520 }]
+  function backend(broken = () => false) {
+    services.signal.statistics.mockImplementation(async (p) => {
+      if (broken(p)) throw Object.assign(new Error('boom'), { status: 500 })
+      if (p.groupBy === 'quarter') return stat('quarter', QUARTER_BUCKETS)
+      if (p.groupBy === 'age_group') return stat('age_group', [{ group: 'UNKNOWN', value: 3 }, { group: '75+', value: 2 }, { group: '0-17', value: 1 }])
+      if (p.groupBy === 'sex') return stat('sex', [{ group: 'FEMALE', value: 3 }, { group: 'MALE', value: 1 }])
+      return stat('seriousness', [{ group: 'SERIOUS', value: p.quarter === '2026Q3' ? 10806 : 12700 }])
+    })
+  }
+  const data = (w, sel, attr) => JSON.parse(w.find(sel).attributes(attr))
+
+  it('draws the three charts from the statistics, not from sample data', async () => {
+    backend()
+    const w = await open('/signals')
+
+    expect(Object.keys(data(w, '.age-chart', 'data-groups'))).toEqual(['0-17', '75+', 'Unknown'])
+    expect(data(w, '.sex-chart', 'data-values')).toEqual({ Female: 75, Male: 25 })
+    const series = data(w, '.serious-chart', 'data-series')
+    expect(series.map((x) => x.reaction)).toEqual(['All reports', 'Serious'])
+    expect(series[1].counts).toEqual([12700, 10806])
+    expect(w.text()).not.toContain('(sample)')
+  })
+
+  it('says what the charts describe: the latest quarter of all drugs by default', async () => {
+    backend()
+    const w = await open('/signals')
+
+    expect(w.findAll('.stats .note').map((n) => n.text())).toEqual(['all drugs · 2026Q3', 'all drugs · 2026Q3', 'all drugs · last 6 quarters'])
+  })
+
+  it('describes the drug and quarter of the table when they are chosen', async () => {
+    backend()
+    const w = await open('/signals?rxcui=5640&drug=IBUPROFEN&quarter=2026Q2')
+
+    expect(w.findAll('.stats .note').map((n) => n.text())).toEqual(['IBUPROFEN · 2026Q2', 'IBUPROFEN · 2026Q2', 'IBUPROFEN · last 6 quarters'])
+    expect(services.signal.statistics).toHaveBeenCalledWith({ rxcui: '5640', groupBy: 'age_group', quarter: '2026Q2' })
+  })
+
+  it('redraws for the new drug after Apply, but not when only the page changes', async () => {
+    backend()
+    const w = await open('/signals')
+    services.signal.statistics.mockClear()
+
+    await w.findAll('.pager button')[1].trigger('click')
+    await flushPromises()
+    expect(services.signal.statistics).not.toHaveBeenCalled()
+
+    router.push({ query: { rxcui: '5640', drug: 'IBUPROFEN' } })
+    await flushPromises()
+    expect(services.signal.statistics).toHaveBeenCalledWith({ rxcui: '5640', groupBy: 'age_group', quarter: '2026Q3' })
+    expect(w.find('.stats .note').text()).toBe('IBUPROFEN · 2026Q3')
+  })
+
+  it('a chart that fails shows its own error and Retry; the other charts and the table stay', async () => {
+    let failAge = true
+    backend((p) => failAge && p.groupBy === 'age_group')
+    const w = await open('/signals')
+    const card = w.find('section[aria-label="Reports by age group"]')
+    expect(card.find('[role="alert"]').text()).toContain('Could not load this chart.')
+    expect(w.find('.sex-chart').exists()).toBe(true)
+    expect(w.find('.serious-chart').exists()).toBe(true)
+    expect(w.findAll('tbody tr')).toHaveLength(1)
+
+    failAge = false
+    await card.find('[role="alert"] button').trigger('click')
+    await flushPromises()
+
+    expect(w.find('.age-chart').exists()).toBe(true)
+  })
+
+  it('says there are no reports instead of an empty chart for a drug without any', async () => {
+    services.signal.statistics.mockImplementation(async (p) => stat(p.groupBy, p.groupBy === 'quarter' ? QUARTER_BUCKETS : []))
+    const w = await open('/signals?rxcui=1')
+
+    expect(w.find('section[aria-label="Reports by age group"]').text()).toContain('No reports for this selection.')
+    expect(w.find('.age-chart').exists()).toBe(false)
+  })
+
+  it('Apply on unchanged filters reloads the charts too', async () => {
+    backend()
+    const w = await open('/signals')
+    services.signal.statistics.mockClear()
+
+    await apply(w)
+
+    expect(services.signal.statistics).toHaveBeenCalledWith({ rxcui: null, groupBy: 'age_group', quarter: '2026Q3' })
+  })
+
+  it('also shows the charts on the Emerging and Label gaps tabs', async () => {
+    backend()
+    const emerging = await open('/signals?tab=emerging&quarter=2026Q2')
+    expect(emerging.find('.stats .note').text()).toBe('all drugs · 2026Q2')
+
+    const gaps = await open('/signals?tab=gaps&rxcui=5640&drug=IBUPROFEN')
+    expect(gaps.find('.stats .note').text()).toBe('IBUPROFEN · all quarters')
   })
 })
 
