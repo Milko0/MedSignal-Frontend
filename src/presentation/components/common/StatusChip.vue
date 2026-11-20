@@ -2,8 +2,17 @@
 import { computed } from 'vue'
 import { STATUS } from '@/core/constants/status'
 
-const props = defineProps({ status: { type: String, required: true } })
-const info = computed(() => STATUS[props.status] ?? { label: props.status, tone: 'slate' })
+// `label` and `tone` override the text and colour the status would give (for values the STATUS map does not know,
+// or text that comes from a rule such as formatShortage).
+const props = defineProps({
+  status: { type: String, required: true },
+  label: { type: String, default: null },
+  tone: { type: String, default: null },
+})
+const info = computed(() => {
+  const known = STATUS[props.status] ?? { label: props.status, tone: 'slate' }
+  return { label: props.label ?? known.label, tone: props.tone ?? known.tone }
+})
 </script>
 
 <template>
