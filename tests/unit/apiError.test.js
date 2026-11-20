@@ -40,6 +40,12 @@ describe('toApiError', () => {
     expect(e.message).toMatch(/cannot reach the server/i)
   })
 
+  it('keeps the path of the failed request', () => {
+    expect(toApiError({ config: { url: '/auth/login' }, response: { status: 401, data: { detail: 'x' } } }).url).toBe('/auth/login')
+    expect(toApiError({ config: { url: '/profile' }, message: 'Network Error' }).url).toBe('/profile')
+    expect(toApiError(failure(500, undefined)).url).toBe('')
+  })
+
   it('falls back to a generic message for an unknown body', () => {
     expect(toApiError(failure(500, '<html>oops</html>')).message).toBe('Request failed (500)')
     expect(toApiError(failure(503, undefined)).status).toBe(503)

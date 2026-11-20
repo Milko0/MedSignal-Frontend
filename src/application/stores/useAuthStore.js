@@ -3,6 +3,9 @@ import { computed, ref } from 'vue'
 import { services } from '@/composition/container'
 import { useCabinetStore } from '@/application/stores/useCabinetStore'
 
+// Requests whose 401 is a form error, not a session expiry.
+const SESSION_REQUESTS = ['/auth/login', '/auth/logout']
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   // The token itself stays in the session storage behind the service; the store only mirrors "is there one"
@@ -57,5 +60,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, loggedIn, isAdmin, initials, login, register, restore, logout }
+  // Called by the HTTP client on every 401. Returns true when it ended a session, so the caller (main.js)
+  // knows to send the user to the login screen. A 401 from the login or logout request itself is not an
+  // expired session (wrong password; token already revoked), and a guest has no session to end.
+  function handleUnauthorized(error) {
+    if (!hasToken.value) return false
+    if (SESSION_REQUESTS.some((path) => error?.url?.endsWith(path))) return false
+    services.auth.clearSession()
+    resetSession()
+    return true
+  }
+
+  return { user, loggedIn, isAdmin, initials, login, register, restore, logout, handleUnauthorized }
 })

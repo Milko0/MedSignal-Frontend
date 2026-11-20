@@ -14,8 +14,9 @@ import { createSignalService } from '@/application/services/signalService'
 import { createCabinetService } from '@/application/services/cabinetService'
 import { createProfileService } from '@/application/services/profileService'
 
-// Session handling is replaced in Phase 2; until then a 401 just drops the stored token.
-configureHttp({ getToken: tokenStorage.get, onUnauthorized: tokenStorage.clear })
+// The client reads the token from storage. What a 401 means for the session (drop it, redirect to /auth) needs the
+// auth store and the router, so main.js plugs onUnauthorized in; until then a 401 changes nothing.
+configureHttp({ getToken: tokenStorage.get })
 
 export const services = {
   auth: createAuthService(authApi, profileApi, tokenStorage),

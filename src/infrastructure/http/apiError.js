@@ -2,12 +2,15 @@
 //   status      HTTP status, 0 = no response (network down, timeout)
 //   message     text safe to show to the user
 //   fieldErrors { [field]: message } from FastAPI 422 validation errors, {} otherwise
+//   url         path of the failed request (e.g. '/auth/login'), '' when unknown; lets the 401 handler tell
+//               "wrong password" apart from "session expired"
 export class ApiError extends Error {
-  constructor({ status = 0, message = 'Something went wrong', fieldErrors = {} } = {}) {
+  constructor({ status = 0, message = 'Something went wrong', fieldErrors = {}, url = '' } = {}) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.fieldErrors = fieldErrors
+    this.url = url
   }
 }
 
@@ -16,12 +19,13 @@ const NETWORK_MESSAGE = 'Cannot reach the server. Check your connection and try 
 // FastAPI bodies: { detail: "text" } for domain errors, { detail: [{ loc, msg, type }] } for 422.
 export function toApiError(error) {
   const response = error?.response
-  if (!response) return new ApiError({ status: 0, message: NETWORK_MESSAGE })
+  const url = error?.config?.url ?? ''
+  if (!response) return new ApiError({ status: 0, message: NETWORK_MESSAGE, url })
 
   const status = response.status
   const detail = response.data?.detail
 
-  if (typeof detail === 'string' && detail) return new ApiError({ status, message: detail })
+  if (typeof detail === 'string' && detail) return new ApiError({ status, message: detail, url })
 
   if (Array.isArray(detail) && detail.length) {
     const fieldErrors = {}
@@ -30,8 +34,8 @@ export function toApiError(error) {
       if (field !== null && field !== undefined && item?.msg && !(field in fieldErrors)) fieldErrors[field] = item.msg
     }
     const message = detail.find((d) => d?.msg)?.msg ?? `Request failed (${status})`
-    return new ApiError({ status, message, fieldErrors })
+    return new ApiError({ status, message, fieldErrors, url })
   }
 
-  return new ApiError({ status, message: `Request failed (${status})` })
+  return new ApiError({ status, message: `Request failed (${status})`, url })
 }

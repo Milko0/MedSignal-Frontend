@@ -130,6 +130,48 @@ describe('useAuthStore', () => {
     expect(cabinet.alerts).toEqual([])
   })
 
+  describe('handleUnauthorized', () => {
+    const expired = { status: 401, url: '/profile' }
+
+    it('drops the session, clears the user and resets the cabinet', () => {
+      token = 'jwt'
+      services.auth.clearSession.mockImplementation(() => { token = null })
+      const auth = useAuthStore()
+      auth.user = user
+      const cabinet = useCabinetStore()
+      cabinet.followed = [{ rxcui: '5640' }]
+
+      expect(auth.handleUnauthorized(expired)).toBe(true)
+
+      expect(services.auth.clearSession).toHaveBeenCalledOnce()
+      expect(auth.user).toBeNull()
+      expect(auth.loggedIn).toBe(false)
+      expect(cabinet.followed).toEqual([])
+    })
+
+    it('ignores a 401 from the login request (wrong password, not an expired session)', () => {
+      token = 'jwt'
+      const auth = useAuthStore()
+      auth.user = user
+
+      expect(auth.handleUnauthorized({ status: 401, url: '/auth/login' })).toBe(false)
+
+      expect(services.auth.clearSession).not.toHaveBeenCalled()
+      expect(auth.user).toEqual(user)
+    })
+
+    it('ignores a 401 from the logout request', () => {
+      token = 'jwt'
+      expect(useAuthStore().handleUnauthorized({ status: 401, url: '/auth/logout' })).toBe(false)
+      expect(services.auth.clearSession).not.toHaveBeenCalled()
+    })
+
+    it('does nothing for a guest', () => {
+      expect(useAuthStore().handleUnauthorized(expired)).toBe(false)
+      expect(services.auth.clearSession).not.toHaveBeenCalled()
+    })
+  })
+
   it('logout revokes the token and resets the session', async () => {
     token = 'jwt'
     services.auth.logout.mockImplementation(async () => { token = null })
