@@ -78,7 +78,7 @@ export const signalEnvelope = { data: signalList, meta: { disclaimer: DISCLAIMER
 export const labelGapsEnvelope = { data: labelGapsData, meta: { disclaimer: DISCLAIMER_TEXT } }
 
 export const reportBrief = {
-  report_id: '10234567', receive_date: '2026-07-14', serious: true, age_group: '65-74', sex: 'F', country: 'US',
+  report_id: '10234567', receive_date: '2026-07-14', serious: true, age_group: '65-74', sex: 'FEMALE', country: 'US',
   reactions: ['Gastrointestinal haemorrhage', 'Anaemia'], suspect_drugs: ['IBUPROFEN'],
 }
 export const signalReports = { items: [reportBrief], total: 1, page: 1, page_size: 10, total_pages: 1 }

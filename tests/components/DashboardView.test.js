@@ -51,7 +51,7 @@ function asUser() {
 }
 
 describe('DashboardView as a guest', () => {
-  beforeEach(() => services.auth.hasToken.mockReturnValue(false))
+  beforeEach(() => { services.auth.hasToken.mockReturnValue(false) })
 
   it('has the guest header, the emerging tile and the account call to action only', async () => {
     const w = await show()

@@ -21,7 +21,17 @@ export const useSignalStore = defineStore('signal', () => {
   const quarters = ref([])            // newest first
   const quartersError = ref(null)
 
+  // FR-09: the reports behind one signal, in a side panel.
+  const emptyDrawer = () => ({
+    open: false, rxcui: null, drug: null, reaction: null,
+    page: 1, pageSize: 10, items: [], total: 0, totalPages: 0,
+    loading: false, error: null,
+    unavailable: false,               // the backend answered 404 (backend request B2: a `/` in the reaction cannot be routed)
+  })
+  const reportsDrawer = ref(emptyDrawer())
+
   let tableTicket = 0                 // only the answer of the latest request is applied
+  let drawerTicket = 0
 
   // The gaps tab is per drug: without one there is nothing to ask for.
   const needsDrug = computed(() => filters.value.tab === 'gaps' && !filters.value.rxcui)
@@ -87,14 +97,47 @@ export const useSignalStore = defineStore('signal', () => {
     }
   }
 
+  async function loadReportsPage(page = 1) {
+    const d = reportsDrawer.value
+    if (!d.open) return
+    const ticket = ++drawerTicket
+    d.loading = true
+    d.error = null
+    d.unavailable = false
+    try {
+      const result = await services.signal.reports(d.rxcui, d.reaction, { page, pageSize: d.pageSize })
+      if (ticket !== drawerTicket) return
+      Object.assign(d, { items: result.items, total: result.total, page: result.page, totalPages: result.totalPages })
+    } catch (e) {
+      if (ticket !== drawerTicket) return
+      Object.assign(d, { items: [], total: 0, totalPages: 0 })
+      if (e?.status === 404) d.unavailable = true
+      else d.error = e
+    } finally {
+      if (ticket === drawerTicket) d.loading = false
+    }
+  }
+
+  // `row` is a Signal of the table. The reaction is sent URL-encoded by the adapter.
+  async function openReports(row) {
+    reportsDrawer.value = { ...emptyDrawer(), open: true, rxcui: row.rxcui, drug: row.drug, reaction: row.reaction }
+    await loadReportsPage(1)
+  }
+
+  function closeReports() {
+    drawerTicket++                    // an answer still on its way is dropped
+    reportsDrawer.value = emptyDrawer()
+  }
+
   // Called by the view with route.query on enter and whenever the query changes.
   async function applyQuery(query) {
     filters.value = filtersFromQuery(query)
+    closeReports()                    // the rows the drawer belonged to are gone
     await loadTable()
   }
 
   return {
     filters, list, labelGaps, usedQuarter, matchCoverage, disclaimer, tableLoading, tableError, quarters, quartersError,
-    needsDrug, drugName, loadQuarters, loadTable, applyQuery,
+    needsDrug, drugName, reportsDrawer, loadQuarters, loadTable, applyQuery, openReports, loadReportsPage, closeReports,
   }
 })

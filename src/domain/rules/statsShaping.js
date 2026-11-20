@@ -10,3 +10,8 @@ export function quartersFromBuckets(buckets) {
     .sort()
     .reverse()
 }
+
+// Display text of a raw bucket / report enum. Only the known enums are rewritten; age ranges (`65-74`), country
+// codes (`US`) and anything new pass through unchanged.
+const GROUP_LABELS = { UNKNOWN: 'Unknown', FEMALE: 'Female', MALE: 'Male', SERIOUS: 'Serious', NON_SERIOUS: 'Non-serious' }
+export const groupLabel = (group) => GROUP_LABELS[group] ?? group ?? ''

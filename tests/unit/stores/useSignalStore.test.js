@@ -3,7 +3,9 @@ import { setupPinia } from '../../helpers/setupPinia'
 import { toLabelGaps } from '@/infrastructure/mappers/labelGapMapper'
 import { toSignalList } from '@/infrastructure/mappers/signalMapper'
 import { toStatistics } from '@/infrastructure/mappers/statisticsMapper'
-import { DISCLAIMER_TEXT, labelGapsData, signalList } from '../../helpers/fixtures'
+import { DISCLAIMER_TEXT, labelGapsData, signalList, signalReports } from '../../helpers/fixtures'
+import { toPage } from '@/infrastructure/mappers/commonMapper'
+import { toReportBrief } from '@/infrastructure/mappers/reportMapper'
 
 vi.mock('@/composition/container', async () => ({
   services: (await import('../../helpers/mockServices')).mockServices(),
@@ -274,5 +276,131 @@ describe('loadQuarters', () => {
     expect(store.quarters).toEqual([])
     expect(store.quartersError.status).toBe(500)
     expect(store.list).not.toBeNull()
+  })
+})
+
+describe('reports drawer', () => {
+  const row = { rxcui: '5640', drug: 'IBUPROFEN', reaction: 'NAUSEA' }
+  const reportsPage = (over = {}) => toPage({ ...signalReports, ...over }, toReportBrief)
+
+  beforeEach(() => { services.signal.reports.mockResolvedValue(reportsPage()) })
+
+  it('starts closed and empty', () => {
+    const d = useSignalStore().reportsDrawer
+
+    expect(d.open).toBe(false)
+    expect(d.items).toEqual([])
+  })
+
+  it("opens for a row and loads page 1 with the row's rxcui and reaction", async () => {
+    const store = useSignalStore()
+
+    await store.openReports(row)
+
+    expect(services.signal.reports).toHaveBeenCalledWith('5640', 'NAUSEA', { page: 1, pageSize: 10 })
+    expect(store.reportsDrawer).toMatchObject({ open: true, drug: 'IBUPROFEN', reaction: 'NAUSEA', total: 1, page: 1, totalPages: 1, loading: false })
+    expect(store.reportsDrawer.items[0].id).toBe('10234567')
+  })
+
+  it('is loading while the request runs', async () => {
+    const pending = deferred()
+    services.signal.reports.mockReturnValue(pending.promise)
+    const store = useSignalStore()
+
+    const opening = store.openReports(row)
+    expect(store.reportsDrawer.open).toBe(true)
+    expect(store.reportsDrawer.loading).toBe(true)
+    pending.resolve(reportsPage())
+    await opening
+
+    expect(store.reportsDrawer.loading).toBe(false)
+  })
+
+  it('loads another page', async () => {
+    const store = useSignalStore()
+    await store.openReports(row)
+    services.signal.reports.mockResolvedValue(reportsPage({ page: 3, total: 50, total_pages: 5 }))
+
+    await store.loadReportsPage(3)
+
+    expect(services.signal.reports).toHaveBeenLastCalledWith('5640', 'NAUSEA', { page: 3, pageSize: 10 })
+    expect(store.reportsDrawer).toMatchObject({ page: 3, totalPages: 5, total: 50 })
+  })
+
+  it('does nothing when the drawer is closed', async () => {
+    const store = useSignalStore()
+
+    await store.loadReportsPage(2)
+
+    expect(services.signal.reports).not.toHaveBeenCalled()
+  })
+
+  it('sends the reaction as it is (the adapter encodes it), including a "/"', async () => {
+    const store = useSignalStore()
+
+    await store.openReports({ ...row, reaction: 'OEDEMA/EFFUSION' })
+
+    expect(services.signal.reports).toHaveBeenCalledWith('5640', 'OEDEMA/EFFUSION', { page: 1, pageSize: 10 })
+  })
+
+  it('marks the drawer unavailable on a 404 (backend request B2), not as an error', async () => {
+    services.signal.reports.mockRejectedValue(failure(404))
+    const store = useSignalStore()
+
+    await store.openReports({ ...row, reaction: 'OEDEMA/EFFUSION' })
+
+    expect(store.reportsDrawer.unavailable).toBe(true)
+    expect(store.reportsDrawer.error).toBeNull()
+    expect(store.reportsDrawer.items).toEqual([])
+    expect(store.reportsDrawer.loading).toBe(false)
+  })
+
+  it('keeps any other failure as an error and clears it on the next load', async () => {
+    services.signal.reports.mockRejectedValueOnce(failure(500))
+    const store = useSignalStore()
+    await store.openReports(row)
+    expect(store.reportsDrawer.error.status).toBe(500)
+    expect(store.reportsDrawer.unavailable).toBe(false)
+
+    await store.loadReportsPage(1)
+
+    expect(store.reportsDrawer.error).toBeNull()
+    expect(store.reportsDrawer.items).toHaveLength(1)
+  })
+
+  it('closing empties the drawer and drops an answer still on its way', async () => {
+    const pending = deferred()
+    services.signal.reports.mockReturnValue(pending.promise)
+    const store = useSignalStore()
+
+    const opening = store.openReports(row)
+    store.closeReports()
+    pending.resolve(reportsPage())
+    await opening
+
+    expect(store.reportsDrawer.open).toBe(false)
+    expect(store.reportsDrawer.items).toEqual([])
+  })
+
+  it('opening another row starts clean and an older answer cannot overwrite it', async () => {
+    const slow = deferred()
+    services.signal.reports.mockReturnValueOnce(slow.promise).mockResolvedValueOnce(reportsPage({ total: 7 }))
+    const store = useSignalStore()
+
+    const first = store.openReports(row)
+    await store.openReports({ rxcui: '1', drug: 'OTHER', reaction: 'RASH' })
+    slow.resolve(reportsPage({ total: 999 }))
+    await first
+
+    expect(store.reportsDrawer).toMatchObject({ drug: 'OTHER', total: 7 })
+  })
+
+  it('closes when the filters change (the rows it belonged to are gone)', async () => {
+    const store = useSignalStore()
+    await store.openReports(row)
+
+    await store.applyQuery({ reaction: 'nausea' })
+
+    expect(store.reportsDrawer.open).toBe(false)
   })
 })

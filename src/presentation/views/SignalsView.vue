@@ -10,6 +10,7 @@ import { formatPercent } from '@/domain/rules/percent'
 import FilterBar from '@/presentation/components/signals/FilterBar.vue'
 import SignalTabs from '@/presentation/components/signals/SignalTabs.vue'
 import SignalTable from '@/presentation/components/signals/SignalTable.vue'
+import ReportsDrawer from '@/presentation/components/signals/ReportsDrawer.vue'
 import LabelGapsTable from '@/presentation/components/signals/LabelGapsTable.vue'
 import AgeBarChart from '@/presentation/components/charts/AgeBarChart.vue'
 import DonutChart from '@/presentation/components/charts/DonutChart.vue'
@@ -91,6 +92,7 @@ const serious = [
         :total-pages="signals.list.totalPages"
         :loading="signals.tableLoading"
         @page="goToPage"
+        @view-reports="signals.openReports"
       />
     </template>
   </section>
@@ -116,6 +118,7 @@ const serious = [
     <section class="card"><h3>Reports by sex (sample)</h3><DonutChart :values="sex" /></section>
     <section class="card"><h3>Serious reports over time (sample)</h3><TrendChart :series="serious" /></section>
   </div>
+  <ReportsDrawer :drawer="signals.reportsDrawer" @close="signals.closeReports" @page="signals.loadReportsPage" />
   <DisclaimerFooter :text="signals.disclaimer ?? undefined" />
 </template>
 

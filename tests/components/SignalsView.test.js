@@ -5,7 +5,9 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { toLabelGaps } from '@/infrastructure/mappers/labelGapMapper'
 import { toSignalList } from '@/infrastructure/mappers/signalMapper'
 import { toStatistics } from '@/infrastructure/mappers/statisticsMapper'
-import { DISCLAIMER_TEXT, labelGapsData, signalList } from '../helpers/fixtures'
+import { toPage } from '@/infrastructure/mappers/commonMapper'
+import { toReportBrief } from '@/infrastructure/mappers/reportMapper'
+import { DISCLAIMER_TEXT, labelGapsData, signalList, signalReports } from '../helpers/fixtures'
 
 vi.mock('@/composition/container', async () => ({
   services: (await import('../helpers/mockServices')).mockServices(),
@@ -336,6 +338,62 @@ describe('SignalsView: Emerging and Label gaps tabs', () => {
     const w = await open('/signals?tab=gaps&rxcui=5640')
 
     expect(w.find('.disclaimer').text()).toBe('Gap disclaimer.')
+  })
+})
+
+describe('SignalsView: reports drawer', () => {
+  beforeEach(() => { services.signal.reports.mockResolvedValue(toPage(signalReports, toReportBrief)) })
+
+  it('"View reports" opens the drawer for that row and loads its reports', async () => {
+    const w = await open('/signals')
+
+    await w.find('button.reports').trigger('click')
+    await flushPromises()
+
+    expect(services.signal.reports).toHaveBeenCalledWith('5640', 'Gastrointestinal haemorrhage', { page: 1, pageSize: 10 })
+    expect(w.find('[role="dialog"]').exists()).toBe(true)
+    expect(w.find('#reports-title').text()).toBe('Reports: ibuprofen and Gastrointestinal haemorrhage')
+    expect(w.findAll('.report')).toHaveLength(1)
+  })
+
+  it('pages through the reports without touching the table or the URL', async () => {
+    services.signal.reports.mockResolvedValue(toPage({ ...signalReports, total: 25, total_pages: 3 }, toReportBrief))
+    const w = await open('/signals')
+    await w.find('button.reports').trigger('click')
+    await flushPromises()
+    services.signal.list.mockClear()
+
+    await w.findAll('[aria-label="Report pages"] button')[1].trigger('click')
+    await flushPromises()
+
+    expect(services.signal.reports).toHaveBeenLastCalledWith('5640', 'Gastrointestinal haemorrhage', { page: 2, pageSize: 10 })
+    expect(services.signal.list).not.toHaveBeenCalled()
+    expect(router.currentRoute.value.query).toEqual({})
+  })
+
+  it('closes with Escape and when the filters change', async () => {
+    const w = await open('/signals')
+    await w.find('button.reports').trigger('click')
+    await flushPromises()
+    await w.find('.overlay').trigger('keydown', { key: 'Escape' })
+    expect(w.find('[role="dialog"]').exists()).toBe(false)
+
+    await w.find('button.reports').trigger('click')
+    await flushPromises()
+    router.push({ query: { reaction: 'nausea' } })
+    await flushPromises()
+    expect(w.find('[role="dialog"]').exists()).toBe(false)
+  })
+
+  it('shows "unavailable" for a reaction the backend cannot route (a "/")', async () => {
+    services.signal.list.mockResolvedValue(list({ items: [{ ...signalList.items[0], reaction: 'OEDEMA/EFFUSION' }] }))
+    services.signal.reports.mockRejectedValue(Object.assign(new Error('Not Found'), { status: 404 }))
+    const w = await open('/signals')
+
+    await w.find('button.reports').trigger('click')
+    await flushPromises()
+
+    expect(w.find('.panel .state').text()).toContain('its name contains a "/"')
   })
 })
 
