@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { createMemoryHistory, createRouter } from 'vue-router'
 
 vi.mock('@/composition/container', async () => ({
   services: (await import('../helpers/mockServices')).mockServices(),
@@ -16,10 +17,21 @@ const failure = (status, message) => Object.assign(new Error(message), { status 
 
 let pinia
 let token
+let router
 async function show({ withUser = true } = {}) {
   const auth = useAuthStore()
   if (withUser) auth.setUser(user)
-  const w = mount(ProfileView, { attachTo: document.body, global: { plugins: [pinia] } })
+  router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/profile', name: 'profile', component: ProfileView },
+      { path: '/auth', name: 'auth', component: { template: '<div />' } },
+      { path: '/', name: 'dashboard', component: { template: '<div />' } },
+    ],
+  })
+  await router.push('/profile')
+  await router.isReady()
+  const w = mount(ProfileView, { attachTo: document.body, global: { plugins: [pinia, router] } })
   await flushPromises()
   return w
 }
@@ -322,5 +334,122 @@ describe('alert settings card', () => {
     const w = await show()
     expect(w.find('nav a[href="#alerts"]').exists()).toBe(true)
     expect(w.find('section#alerts').exists()).toBe(true)
+  })
+})
+
+describe('account card', () => {
+  const button = (w, text) => w.findAll('button').find((b) => b.text() === text)
+  const dialog = (w) => w.find('[role="dialog"]')
+  const ask = async (w) => { await button(w, 'Delete account').trigger('click'); await flushPromises() }
+  const confirmButton = (w) => dialog(w).findAll('button').find((b) => b.text().startsWith('Delete my account'))
+
+  it('"Log out" ends the session, calls /auth/logout and goes to the dashboard', async () => {
+    services.auth.logout.mockResolvedValue(undefined)
+    const w = await show()
+
+    await button(w, 'Log out').trigger('click')
+    await flushPromises()
+
+    expect(services.auth.logout).toHaveBeenCalledOnce()
+    expect(useAuthStore().loggedIn).toBe(false)
+    expect(router.currentRoute.value.name).toBe('dashboard')
+  })
+
+  it('"Delete account" opens a dialog and deletes nothing yet', async () => {
+    const w = await show()
+    expect(dialog(w).exists()).toBe(false)
+
+    await ask(w)
+
+    expect(dialog(w).exists()).toBe(true)
+    expect(dialog(w).attributes('aria-modal')).toBe('true')
+    expect(dialog(w).text()).toContain('p7_test_user')
+    expect(services.profile.remove).not.toHaveBeenCalled()
+  })
+
+  it('the confirm button needs the exact username', async () => {
+    const w = await show()
+    await ask(w)
+    expect(confirmButton(w).attributes('disabled')).toBeDefined()
+
+    for (const wrong of ['p7_test', 'P7_TEST_USER', 'p7_test_user_', 'someone else']) {
+      await dialog(w).find('input').setValue(wrong)
+      expect(confirmButton(w).attributes('disabled'), wrong).toBeDefined()
+    }
+    await dialog(w).find('input').setValue('p7_test_user')
+    expect(confirmButton(w).attributes('disabled')).toBeUndefined()
+
+    await dialog(w).find('input').setValue('  p7_test_user ')
+    expect(confirmButton(w).attributes('disabled')).toBeUndefined()
+  })
+
+  it('Enter in the field does not delete while the name is wrong', async () => {
+    const w = await show()
+    await ask(w)
+    await dialog(w).find('input').setValue('nope')
+    await dialog(w).find('input').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+    expect(services.profile.remove).not.toHaveBeenCalled()
+  })
+
+  it('Cancel and Escape close the dialog without deleting, and the field is empty next time', async () => {
+    const w = await show()
+    await ask(w)
+    await dialog(w).find('input').setValue('p7_test_user')
+    await button(w, 'Cancel').trigger('click')
+    expect(dialog(w).exists()).toBe(false)
+
+    await ask(w)
+    expect(dialog(w).find('input').element.value).toBe('')
+    await dialog(w).trigger('keydown', { key: 'Escape' })
+    expect(dialog(w).exists()).toBe(false)
+    expect(services.profile.remove).not.toHaveBeenCalled()
+    expect(useAuthStore().loggedIn).toBe(true)
+  })
+
+  it('deletes, leaves the session without /auth/logout and lands on /auth with the notice flag', async () => {
+    services.profile.remove.mockResolvedValue(undefined)
+    const w = await show()
+    await ask(w)
+    await dialog(w).find('input').setValue('p7_test_user')
+
+    await confirmButton(w).trigger('click')
+    await flushPromises()
+
+    expect(services.profile.remove).toHaveBeenCalledOnce()
+    expect(services.auth.logout).not.toHaveBeenCalled()
+    expect(useAuthStore().loggedIn).toBe(false)
+    expect(useAuthStore().user).toBeNull()
+    expect(router.currentRoute.value.name).toBe('auth')
+    expect(router.currentRoute.value.query).toEqual({ deleted: '1' })
+  })
+
+  it('a refused delete shows the error in the dialog, keeps the user logged in and allows another try', async () => {
+    services.profile.remove.mockRejectedValueOnce(failure(500, 'Request failed (500)'))
+    services.profile.remove.mockResolvedValueOnce(undefined)
+    const w = await show()
+    await ask(w)
+    await dialog(w).find('input').setValue('p7_test_user')
+
+    await confirmButton(w).trigger('click')
+    await flushPromises()
+
+    expect(dialog(w).find('.banner').text()).toBe('Request failed (500)')
+    expect(useAuthStore().loggedIn).toBe(true)
+    expect(router.currentRoute.value.name).toBe('profile')
+
+    await confirmButton(w).trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('auth')
+  })
+
+  it('does not flash an error card while the session ends', async () => {
+    services.profile.remove.mockResolvedValue(undefined)
+    const w = await show()
+    await ask(w)
+    await dialog(w).find('input').setValue('p7_test_user')
+    await confirmButton(w).trigger('click')
+    await flushPromises()
+    expect(w.text()).not.toContain('Could not load your profile.')
   })
 })

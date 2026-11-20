@@ -162,3 +162,18 @@ describe('AuthView', () => {
     expect(push).toHaveBeenCalledWith('/')
   })
 })
+
+describe('AuthView: after an account was deleted', () => {
+  it('says so when the profile page sends the user here with ?deleted=1', () => {
+    route.query = { deleted: '1' }
+    expect(show().find('.notice').text()).toBe('Your account was deleted.')
+  })
+
+  it('shows nothing for a plain visit or any other value', () => {
+    expect(show().find('.notice').exists()).toBe(false)
+    route.query = { deleted: 'yes' }
+    expect(show().find('.notice').exists()).toBe(false)
+    route.query = { deleted: ['1'] }
+    expect(show().find('.notice').exists()).toBe(false)
+  })
+})

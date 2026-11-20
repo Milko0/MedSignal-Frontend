@@ -4,6 +4,7 @@ import { useAuthStore } from '@/application/stores/useAuthStore'
 import ProfileForm from '@/presentation/components/profile/ProfileForm.vue'
 import PasswordForm from '@/presentation/components/profile/PasswordForm.vue'
 import AlertSettingsCard from '@/presentation/components/profile/AlertSettingsCard.vue'
+import AccountCard from '@/presentation/components/profile/AccountCard.vue'
 
 const auth = useAuthStore()
 </script>
@@ -16,18 +17,21 @@ const auth = useAuthStore()
     <nav class="menu" aria-label="Profile sections">
       <a href="#profile">Profile</a>
       <a href="#alerts">Alert settings</a>
+      <a href="#account">Account</a>
     </nav>
 
     <div class="sections">
-      <section v-if="!auth.user" class="card error" role="alert" aria-label="Profile">
+      <!-- A user who just ended the session (log out, account deleted) is on the way to another page: show nothing. -->
+      <section v-if="auth.loggedIn && !auth.user" class="card error" role="alert" aria-label="Profile">
         Could not load your profile.
         <button type="button" class="link" @click="auth.restore()">Retry</button>
       </section>
-      <section v-else id="profile" class="stack" aria-label="Profile">
+      <section v-else-if="auth.user" id="profile" class="stack" aria-label="Profile">
         <ProfileForm />
         <PasswordForm />
       </section>
       <section v-if="auth.user" id="alerts" aria-label="Alert settings"><AlertSettingsCard /></section>
+      <section v-if="auth.user" id="account" aria-label="Account"><AccountCard /></section>
     </div>
   </div>
 </template>

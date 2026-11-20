@@ -19,6 +19,9 @@ const regBanner = ref('')
 const loginPending = ref(false)
 const regPending = ref(false)
 
+// /auth?deleted=1 is where the profile page sends a user whose account was just deleted.
+const deleted = route.query.deleted === '1'
+
 // After logging in, go back to the page the guard interrupted (?redirect=...), else the dashboard.
 const done = () => router.push(safeRedirect(route.query.redirect, '/'))
 
@@ -58,6 +61,7 @@ async function submitRegister() {
 </script>
 
 <template>
+  <p v-if="deleted" class="notice" role="status">Your account was deleted.</p>
   <h1>Know what changes in the medicines you take</h1>
   <p class="muted">Alerts when side-effect reports rise, a label changes or a drug goes into shortage.</p>
   <div class="grid two">
@@ -111,6 +115,7 @@ h2, form p { margin: 0; }
 label { font-size: .85rem; font-weight: 600; margin-top: .4rem; }
 input { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 input[aria-invalid='true'] { border-color: var(--coral); }
+.notice { background: var(--green-soft); color: var(--green); border-radius: 8px; padding: .6rem .8rem; margin: 0 0 1rem; }
 .error { color: var(--coral); font-size: .85rem; }
 .banner { background: var(--coral-soft); border-radius: 8px; padding: .5rem .7rem; }
 .btn { margin-top: .8rem; }
