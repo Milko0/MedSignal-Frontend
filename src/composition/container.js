@@ -18,7 +18,7 @@ import { createProfileService } from '@/application/services/profileService'
 configureHttp({ getToken: tokenStorage.get, onUnauthorized: tokenStorage.clear })
 
 export const services = {
-  auth: createAuthService(authApi),
+  auth: createAuthService(authApi, profileApi, tokenStorage),
   drug: createDrugService(drugsApi, shortagesApi),
   signal: createSignalService(signalsApi, statisticsApi),
   cabinet: createCabinetService(cabinetApi),

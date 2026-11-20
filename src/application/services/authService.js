@@ -1,11 +1,34 @@
-import { tokenStorage } from '@/infrastructure/storage/tokenStorage'
+// `session` is a port with get() / set(token) / clear(); the composition root passes the token storage.
+export function createAuthService(authApi, profileApi, session) {
+  // FR-12: login returns only a token, so the user comes from GET /profile.
+  async function login({ identifier, password }) {
+    const { accessToken } = await authApi.login({ identifier, password })
+    session.set(accessToken)
+    try {
+      return await profileApi.get()
+    } catch (e) {
+      session.clear() // a token we cannot use must not stay around
+      throw e
+    }
+  }
 
-export function createAuthService(api) {
-  const store = async (res) => { tokenStorage.set(res.access_token); return res.user }
   return {
-    register: (form) => api.register(form).then(store),
-    login: (form) => api.login(form).then(store),
-    logout: () => tokenStorage.clear(),
-    hasToken: () => !!tokenStorage.get(),
+    login,
+    // FR-11: register returns no token, so log in right after with the same credentials.
+    async register({ username, email, password }) {
+      await authApi.register({ username, email, password })
+      return login({ identifier: username, password })
+    },
+    // Revoke the token on the server (best effort), then always drop it locally.
+    async logout() {
+      try {
+        if (session.get()) await authApi.logout()
+      } catch {
+        // already expired or revoked: nothing left to revoke
+      } finally {
+        session.clear()
+      }
+    },
+    hasToken: () => !!session.get(),
   }
 }
