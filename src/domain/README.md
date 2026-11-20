@@ -16,7 +16,8 @@ Models (JSDoc typedefs) and pure business rules. JavaScript, not TypeScript.
 
 | Item | Role |
 |---|---|
-| `models/` | Drug, Signal, Alternative, LabelGap, Alert, User typedefs |
-| `rules/signalSeverity.js` | PRR to severity tone |
+| `models/` | User, Drug360, DrugSearchResult, TrendPoint, Signal, SignalList, LabelGaps, Alternatives, Alert, FollowedDrug, ReportBrief, Statistics, AlertSettings, Page typedefs (camelCase, mirror the backend DTOs) |
+| `rules/signalSeverity.js` | PRR to severity tone, label match text (Listed / Partly listed / Not listed) |
 | `rules/isEmerging.js` | FR-06 |
-| `rules/shortageStatus.js` | Shortage predicate |
+| `rules/shortageStatus.js` | `isInShortage`, `shortageTone`, `shortageLabel` for the backend enum (`CURRENT`, `TO_BE_DISCONTINUED`, `RESOLVED`, `null`) |
+| `rules/alertTone.js` | Alert type (`SIGNAL`, `SHORTAGE`, `LABEL`, `RECALL`) to tone and label |

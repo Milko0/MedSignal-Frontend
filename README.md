@@ -11,14 +11,14 @@ The frontend mirrors the backend's clean architecture. Dependencies point inward
 
 | Layer | Folder | Responsibility | May import | Never imports |
 |---|---|---|---|---|
-| Domain | `src/domain` | Models (JSDoc typedefs) and pure rules: `signalSeverity`, `isEmerging`, `shortageStatus` | nothing | Vue, Axios, Pinia |
+| Domain | `src/domain` | Models (JSDoc typedefs) and pure rules: `signalSeverity`, `isEmerging`, `shortageStatus`, `alertTone` | nothing | Vue, Axios, Pinia |
 | Application | `src/application` | Services (use-case logic) and Pinia stores (UI state) | domain, core | Axios, components |
-| Infrastructure | `src/infrastructure` | Axios client (JWT header, 401 handling), API adapters, mappers, token storage | core, domain | presentation |
+| Infrastructure | `src/infrastructure` | Axios client (token getter, `ApiError`, 401 hook), API adapters that return models, mappers, token storage | core, domain | presentation |
 | Presentation | `src/presentation` | Views, layouts, components, charts, router with guards, styles, composables | application, core | infrastructure |
 | Core | `src/core` | API base URL, constants (disclaimer, status palette) | - | - |
 
 `src/composition/container.js` is the **composition root**: the only file that wires the concrete API adapters into the services.
-Data flow: view -> store -> service -> API adapter -> backend `/api`. Mappers convert the API's snake_case JSON into camelCase domain models.
+Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters call the mappers, which convert the API's snake_case JSON into camelCase domain models, so everything above infrastructure sees only models. Failed requests reject with one `ApiError { status, message, fieldErrors }`.
 
 ## 2. Folder structure
 
@@ -34,15 +34,15 @@ MedSignal-Frontend/
 │   │   ├── config/env.js            # API base URL
 │   │   └── constants/               # disclaimer.js, status.js (teal / amber / coral / green map)
 │   ├── domain/
-│   │   ├── models/                  # drug, signal, shortage, label, alert, user (JSDoc typedefs)
-│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, isEmerging.js
+│   │   ├── models/                  # user, drug, signal, shortage, label, alert, cabinet, report, statistics, alertSettings, page (JSDoc typedefs)
+│   │   └── rules/                   # signalSeverity.js, shortageStatus.js, alertTone.js, isEmerging.js
 │   ├── application/
 │   │   ├── services/                # authService, drugService, signalService, cabinetService, profileService
 │   │   └── stores/                  # useAuthStore, useDrugStore, useSignalStore, useCabinetStore, useUiStore
 │   ├── infrastructure/
-│   │   ├── http/httpClient.js       # Axios, JWT header, 401 handling
-│   │   ├── api/                     # authApi, drugsApi, signalsApi, statisticsApi, cabinetApi, profileApi
-│   │   ├── mappers/                 # drugMapper, signalMapper, alertMapper
+│   │   ├── http/                    # httpClient.js (Axios, token getter, 401 hook), apiError.js, query.js
+│   │   ├── api/                     # authApi, drugsApi, shortagesApi, signalsApi, statisticsApi, cabinetApi, profileApi
+│   │   ├── mappers/                 # one per backend DTO: common, user, drug, trend, labelGap, alternative, signal, report, statistics, cabinet, alert, profile
 │   │   └── storage/tokenStorage.js
 │   └── presentation/
 │       ├── router/                  # index.js, routes.js, guards.js (guest vs authenticated)
@@ -58,7 +58,7 @@ MedSignal-Frontend/
 │       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart
 │       ├── composables/             # useDebouncedSearch.js, useAsyncState.js
 │       └── styles/                  # tokens.css (palette), base.css
-└── tests/ {unit, components}        # Vitest + Vue Test Utils
+└── tests/ {unit, components, helpers}   # Vitest + Vue Test Utils; helpers = fixtures, mock services, Pinia setup
 ```
 
 ## 3. Views and functionalities
@@ -105,7 +105,7 @@ Copy `.env.example` to `.env`. `VITE_API_BASE_URL` (default `/api`) is the base 
 npm install
 cp .env.example .env
 npm run dev        # http://localhost:5173 (start the backend first)
-npm test           # 3 tests
+npm test           # unit tests, no network needed
 npm run build      # output in dist/
 ```
 
@@ -113,7 +113,7 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT, mappers, login and register forms, navbar and search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register forms, navbar and search box, status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
 - **Placeholders with TODOs:** Dashboard, Drug details, My medicines and Profile content, and the table components (`SignalTable`, `FilterBar`, `AlternativesTable`, `FollowedDrugRow`, `AlertList` and similar).
 
 ## 9. How to add a feature
