@@ -15,7 +15,7 @@ Frontend tests.
 - `unit/stores/`: Pinia stores with a mocked `services` container (see `helpers/mockServices.js`).
 - `components/`: component rendering.
 - `helpers/`: shared fixtures and store-test helpers. Not test files.
-- Tests never call the network; live checks against the backend are done by hand per phase (`plan_f/pN_test/results.md`).
+- Tests never call the network; live checks against the running backend are done by hand.
 
 ## Contents
 

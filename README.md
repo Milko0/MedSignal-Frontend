@@ -118,7 +118,7 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 ## 8. State of the skeleton
 
 - **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  Profile and settings (edit username and email, change password, alert switches with explicit save, log out, delete account with the username typed to confirm), the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
-- **Placeholders with TODOs:** none in the views; the toast from `useUiStore.notify` is stored but not rendered yet (Phase 8).
+- **Placeholders with TODOs:** none in the views; the toast from `useUiStore.notify` is stored but not rendered yet.
 
 ## 9. How to add a feature
 
