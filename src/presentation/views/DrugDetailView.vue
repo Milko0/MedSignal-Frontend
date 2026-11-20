@@ -1,12 +1,13 @@
 <script setup>
 // View 3 - Drug 360 (FR-02, FR-03, FR-10, FR-15): header, shortage, recalls, label, reactions, trend, alternatives.
-import { onMounted } from 'vue'
+import { watch } from 'vue'
 import { useDrugStore } from '@/application/stores/useDrugStore'
 import DisclaimerFooter from '@/presentation/components/common/DisclaimerFooter.vue'
 
 const props = defineProps({ rxcui: String })
 const drugs = useDrugStore()
-onMounted(() => drugs.fetchDrug360(props.rxcui))
+// Another drug in the URL (navbar search) must reload, not reuse the one on screen.
+watch(() => props.rxcui, (rxcui) => drugs.loadDrug(rxcui), { immediate: true })
 </script>
 
 <template>

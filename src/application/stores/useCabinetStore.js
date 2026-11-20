@@ -10,8 +10,11 @@ export const useCabinetStore = defineStore('cabinet', () => {
   async function loadFollowed() { followed.value = await services.cabinet.list() }
   async function loadAlerts() { alerts.value = await services.cabinet.alerts() }
   async function load() { await Promise.all([loadFollowed(), loadAlerts()]) }
-  async function follow(rxcui) { await services.cabinet.follow(rxcui); await load() }
-  async function unfollow(rxcui) { await services.cabinet.unfollow(rxcui); await load() }
+  // The follow itself worked once the service call returns; a failing refresh afterwards must not look like a failed
+  // follow (the caller would roll back). The next full load corrects the list.
+  const refreshFollowed = () => loadFollowed().catch(() => {})
+  async function follow(rxcui) { await services.cabinet.follow(rxcui); await refreshFollowed() }
+  async function unfollow(rxcui) { await services.cabinet.unfollow(rxcui); await refreshFollowed() }
   async function dismiss(id) { await services.cabinet.dismiss(id); alerts.value = alerts.value.filter((a) => a.id !== id) }
   async function dismissAll() { await services.cabinet.dismissAll(); alerts.value = [] }
   function reset() { followed.value = []; alerts.value = [] }
