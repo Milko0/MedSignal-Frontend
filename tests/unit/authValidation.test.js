@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { hasErrors, mapAuthError, validateLogin, validateRegister } from '@/domain/rules/authValidation'
+import {
+  hasErrors, mapAuthError, mapProfileError, profileChanges, validateLogin, validateProfile, validateRegister,
+} from '@/domain/rules/authValidation'
 
 const good = { username: 'p2_test_user', email: 'p2_test_user@example.com', password: 'secret123' }
 
@@ -83,5 +85,66 @@ describe('mapAuthError', () => {
 
   it('has a generic text when there is no message at all', () => {
     expect(mapAuthError(undefined, 'login').banner).toMatch(/something went wrong/i)
+  })
+})
+
+describe('validateProfile', () => {
+  it('accepts a valid form and needs no password', () => {
+    expect(validateProfile({ username: 'p7_test_user', email: 'p7_test_user@example.com' })).toEqual({})
+  })
+
+  it('applies the username and email rules of the registration', () => {
+    expect(validateProfile({ username: 'ab', email: 'a@b.co' }).username).toMatch(/3-32/)
+    expect(validateProfile({ username: 'a'.repeat(33), email: 'a@b.co' }).username).toBeDefined()
+    expect(validateProfile({ username: 'abc', email: 'plain' }).email).toBeDefined()
+    expect(Object.keys(validateProfile({ username: '', email: '' }))).toEqual(['username', 'email'])
+  })
+})
+
+describe('profileChanges', () => {
+  const user = { username: 'p7_test_user', email: 'p7_test_user@example.com' }
+
+  it('is empty while the form equals the saved user', () => {
+    expect(profileChanges(user, user)).toEqual({})
+  })
+
+  it('spaces around a value and a different case of the email are not changes (the backend lower-cases it)', () => {
+    expect(profileChanges({ username: '  p7_test_user ', email: 'P7_Test_User@Example.com' }, user)).toEqual({})
+  })
+
+  it('lists only the fields that changed, trimmed', () => {
+    expect(profileChanges({ ...user, email: ' new@example.com ' }, user)).toEqual({ email: 'new@example.com' })
+    expect(profileChanges({ ...user, username: 'other_name' }, user)).toEqual({ username: 'other_name' })
+    expect(profileChanges({ username: 'other_name', email: 'new@example.com' }, user))
+      .toEqual({ username: 'other_name', email: 'new@example.com' })
+  })
+
+  it('a change of the username case is a change (usernames are case sensitive)', () => {
+    expect(profileChanges({ ...user, username: 'P7_test_user' }, user)).toEqual({ username: 'P7_test_user' })
+  })
+})
+
+describe('mapProfileError (profile)', () => {
+  it('puts a 409 under the field the backend names', () => {
+    expect(mapProfileError({ status: 409, message: 'username already in use' }, 'profile'))
+      .toEqual({ fields: { username: 'username already in use' }, banner: '' })
+    expect(mapProfileError({ status: 409, message: 'email already in use' }, 'profile'))
+      .toEqual({ fields: { email: 'email already in use' }, banner: '' })
+  })
+
+  it('shows a 409 that names neither field as a banner', () => {
+    expect(mapProfileError({ status: 409, message: 'Conflict' }, 'profile')).toEqual({ fields: {}, banner: 'Conflict' })
+  })
+
+  it('maps 422 field errors to the fields of the form, and falls back to a banner', () => {
+    const error = { status: 422, message: 'x', fieldErrors: { email: 'not valid', page: 'y' } }
+    expect(mapProfileError(error, 'profile').fields).toEqual({ email: 'not valid' })
+    expect(mapProfileError({ status: 422, message: 'Bad', fieldErrors: { page: 'y' } }, 'profile'))
+      .toEqual({ fields: {}, banner: 'Bad' })
+  })
+
+  it('shows network and server errors as a banner', () => {
+    expect(mapProfileError({ status: 0, message: 'Cannot reach the server.' }, 'profile').banner).toMatch(/cannot reach/i)
+    expect(mapProfileError(undefined, 'profile').banner).toBe('Something went wrong. Please try again.')
   })
 })

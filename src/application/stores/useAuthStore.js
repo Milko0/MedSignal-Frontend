@@ -2,9 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { services } from '@/composition/container'
 import { useCabinetStore } from '@/application/stores/useCabinetStore'
-
-// Requests whose 401 is a form error, not a session expiry.
-const SESSION_REQUESTS = ['/auth/login', '/auth/logout']
+import { useProfileStore } from '@/application/stores/useProfileStore'
+import { FORM_401_PATHS } from '@/core/constants/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -22,6 +21,17 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     hasToken.value = false
     useCabinetStore().reset()
+    useProfileStore().reset()
+  }
+
+  // Shown to the whole app after the profile page changed the user (new username or email).
+  const setUser = (value) => { user.value = value }
+
+  // Ends the session here only, without calling /auth/logout: for a token the server has already revoked or dropped
+  // (account deleted, expired session).
+  function endSession() {
+    services.auth.clearSession()
+    resetSession()
   }
 
   // login and register throw the ApiError so the form can show it; the token flag is synced either way.
@@ -61,15 +71,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Called by the HTTP client on every 401. Returns true when it ended a session, so the caller (main.js)
-  // knows to send the user to the login screen. A 401 from the login or logout request itself is not an
-  // expired session (wrong password; token already revoked), and a guest has no session to end.
+  // knows to send the user to the login screen. A 401 that answers a form (wrong login or current password, token
+  // already revoked on logout, see FORM_401_PATHS) is not an expired session, and a guest has no session to end.
   function handleUnauthorized(error) {
     if (!hasToken.value) return false
-    if (SESSION_REQUESTS.some((path) => error?.url?.endsWith(path))) return false
-    services.auth.clearSession()
-    resetSession()
+    if (FORM_401_PATHS.some((path) => error?.url?.endsWith(path))) return false
+    endSession()
     return true
   }
 
-  return { user, loggedIn, isAdmin, initials, login, register, restore, logout, handleUnauthorized }
+  return { user, loggedIn, isAdmin, initials, login, register, restore, logout, setUser, endSession, handleUnauthorized }
 })
