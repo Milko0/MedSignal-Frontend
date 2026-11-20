@@ -3,6 +3,7 @@ import { configureHttp } from '@/infrastructure/http/httpClient'
 import { tokenStorage } from '@/infrastructure/storage/tokenStorage'
 import { authApi } from '@/infrastructure/api/authApi'
 import { drugsApi } from '@/infrastructure/api/drugsApi'
+import { shortagesApi } from '@/infrastructure/api/shortagesApi'
 import { signalsApi } from '@/infrastructure/api/signalsApi'
 import { statisticsApi } from '@/infrastructure/api/statisticsApi'
 import { cabinetApi } from '@/infrastructure/api/cabinetApi'
@@ -18,7 +19,7 @@ configureHttp({ getToken: tokenStorage.get, onUnauthorized: tokenStorage.clear }
 
 export const services = {
   auth: createAuthService(authApi),
-  drug: createDrugService(drugsApi),
+  drug: createDrugService(drugsApi, shortagesApi),
   signal: createSignalService(signalsApi, statisticsApi),
   cabinet: createCabinetService(cabinetApi),
   profile: createProfileService(profileApi),
