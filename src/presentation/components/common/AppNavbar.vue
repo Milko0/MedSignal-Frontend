@@ -1,13 +1,18 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/application/stores/useAuthStore'
 import { useCabinetStore } from '@/application/stores/useCabinetStore'
 import DrugSearchBox from '@/presentation/components/drug/DrugSearchBox.vue'
+import AlertBell from '@/presentation/components/common/AlertBell.vue'
 
 const auth = useAuthStore()
 const cabinet = useCabinetStore()
 const router = useRouter()
+
+// Once after login or a restored session: the count of "My medicines" and the bell need the lists on every page.
+// load() does nothing while they are fresh, and shares a request that is already on its way (the dashboard's).
+watch(() => auth.loggedIn, (loggedIn) => { if (loggedIn) cabinet.load() }, { immediate: true })
 
 const menuOpen = ref(false)
 const account = ref(null)
@@ -21,13 +26,17 @@ async function logOut() {
 // Close the menu on a click elsewhere or on Escape.
 const closeOutside = (e) => { if (account.value && !account.value.contains(e.target)) menuOpen.value = false }
 const closeOnEscape = (e) => { if (e.key === 'Escape') menuOpen.value = false }
+// No polling: when the window comes back, alerts older than a minute are read again.
+const onVisible = () => { if (document.visibilityState === 'visible' && auth.loggedIn) cabinet.refreshAlerts() }
 onMounted(() => {
   document.addEventListener('click', closeOutside)
   document.addEventListener('keydown', closeOnEscape)
+  document.addEventListener('visibilitychange', onVisible)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('click', closeOutside)
   document.removeEventListener('keydown', closeOnEscape)
+  document.removeEventListener('visibilitychange', onVisible)
 })
 </script>
 
@@ -37,9 +46,10 @@ onBeforeUnmount(() => {
     <nav>
       <RouterLink to="/">Dashboard</RouterLink>
       <RouterLink to="/signals">Signals &amp; statistics</RouterLink>
-      <RouterLink v-if="auth.loggedIn" to="/my-medicines">My medicines <b>{{ cabinet.followed.length }}</b></RouterLink>
+      <RouterLink v-if="auth.loggedIn" to="/my-medicines">My medicines <b>{{ cabinet.followedCount }}</b></RouterLink>
     </nav>
     <DrugSearchBox compact />
+    <AlertBell v-if="auth.loggedIn" />
     <div v-if="auth.loggedIn" ref="account" class="account">
       <button class="avatar" type="button" aria-haspopup="menu" :aria-expanded="menuOpen"
               :aria-label="`Account menu for ${auth.user?.username ?? 'you'}`" @click="menuOpen = !menuOpen">
