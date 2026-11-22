@@ -114,21 +114,21 @@ const setForm = (dosageForm) => drugs.setSelection({ ...drugs.selection, dosageF
 </template>
 
 <style scoped>
-.crumbs { font-size: .85rem; margin-bottom: .75rem; }
-.state { max-width: 560px; margin: 1.5rem auto; }
-.state h1 { font-size: 1.3rem; }
-.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin: 1rem 0 0; }
-.hint { font-size: .82rem; }
-.body { display: grid; gap: 1rem; margin-top: 1rem; transition: opacity .15s; }
+.crumbs { font-size: var(--fs-sm); margin-bottom: var(--s-3); }
+.state { max-width: 560px; margin: var(--s-5) auto; }
+.state h1 { font-size: var(--fs-lg); }
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3); margin: var(--s-4) 0 0; }
+.hint { font-size: var(--fs-sm); }
+.body { display: grid; gap: var(--s-4); margin-top: var(--s-4); transition: opacity var(--t-fast); }
 .body.dim { opacity: .55; pointer-events: none; }
 .grid.three { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
-.card > p { margin: .5rem 0; }
-.quality { font-size: .82rem; margin: 0; }
+h2 { margin: 0 0 var(--s-2); }
+.card > p { margin: var(--s-2) 0; }
+.quality { font-size: var(--fs-sm); color: var(--ink-2); margin: 0; }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
-.skeleton { display: grid; gap: 1rem; }
-.skeleton .row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.skeleton { display: grid; gap: var(--s-4); }
+.skeleton .row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--s-4); }
 .block { height: 7rem; border-radius: var(--radius); background: linear-gradient(90deg, var(--slate-soft), var(--line), var(--slate-soft)); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
 .block.tall { height: 6rem; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }

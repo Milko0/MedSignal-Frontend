@@ -166,10 +166,10 @@ const loaded = (name) => signals.stats[name] !== null
 </template>
 
 <style scoped>
-.tabs { margin: 1rem 0 .75rem; }
-.summary { margin: .75rem 0; font-size: .88rem; }
-.results { margin-bottom: 1rem; }
-.gaps-title { font-size: 1.05rem; margin: 0 0 .5rem; }
+.tabs { margin: var(--s-5) 0 var(--s-4); }
+.summary { margin: var(--s-3) 0; font-size: var(--fs-sm); color: var(--ink-2); }
+.results { margin-bottom: var(--s-4); }
+.gaps-title { font-size: var(--fs-lg); margin: 0 0 var(--s-2); }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 </style>

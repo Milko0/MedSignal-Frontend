@@ -28,11 +28,11 @@ defineEmits(['retry'])
 </template>
 
 <style scoped>
-h3 { font-size: 1rem; margin: 0 0 .15rem; }
-.note { margin: 0 0 .5rem; font-size: .8rem; }
-.state { margin: .75rem 0; }
+h3 { font-family: var(--font-display); font-size: var(--fs-base); font-weight: 600; margin: 0 0 var(--s-1); }
+.note { margin: 0 0 var(--s-2); font-size: var(--fs-xs); color: var(--ink-2); }
+.state { margin: var(--s-3) 0; }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
-.chart { transition: opacity .15s; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.chart { transition: opacity var(--t-fast); }
 .chart.dim { opacity: .5; }
 </style>

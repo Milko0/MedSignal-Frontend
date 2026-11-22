@@ -52,15 +52,19 @@ const open = (s) => router.push(target(s))
 </template>
 
 <style scoped>
-.head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: .5rem; }
-h2 { font-size: 1.05rem; margin: 0; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--line); }
-td { padding: .5rem; border-bottom: 1px solid var(--line); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.row { cursor: pointer; }
-.row:hover { background: var(--teal-soft); }
-.state { margin: .5rem 0; }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); margin-bottom: var(--s-2); }
+h2 { margin: 0; }
+.head a { font-size: var(--fs-md); font-weight: 500; }
+.card { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+th { text-align: left; font-weight: 500; font-size: var(--fs-xs); letter-spacing: .02em; color: var(--ink-2); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+td { padding: .625rem var(--s-3); border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+td.num { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.row { cursor: pointer; transition: background-color var(--t-fast); }
+.row:hover { background: var(--accent-soft); }
+.state { margin: var(--s-2) 0; }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 </style>

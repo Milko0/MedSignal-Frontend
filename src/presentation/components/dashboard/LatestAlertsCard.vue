@@ -39,20 +39,17 @@ defineEmits(['retry'])
 </template>
 
 <style scoped>
-.head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: .5rem; }
-h2 { font-size: 1.05rem; margin: 0; }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); margin-bottom: var(--s-2); }
+h2 { margin: 0; }
+.head a { font-size: var(--fs-md); font-weight: 500; }
 ul { list-style: none; margin: 0; padding: 0; }
-li { display: flex; align-items: flex-start; gap: .7rem; padding: .55rem 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
+li { display: flex; align-items: flex-start; gap: var(--s-3); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); font-size: var(--fs-md); }
 li:last-child { border-bottom: 0; }
-.dot { flex: none; width: .65rem; height: .65rem; border-radius: 50%; margin-top: .35rem; }
-.dot.teal { background: var(--teal); }
-.dot.amber { background: var(--amber); }
-.dot.coral { background: var(--coral); }
-.dot.green { background: var(--green); }
-.dot.slate { background: var(--slate); }
+.dot { flex: none; width: .5rem; height: .5rem; border-radius: 50%; margin-top: .45rem; }
+.dot.teal { background: var(--teal); } .dot.amber { background: var(--amber); } .dot.coral { background: var(--coral); } .dot.green { background: var(--green); } .dot.slate { background: var(--slate); }
 .body { flex: 1; }
-.when { flex: none; font-size: .78rem; white-space: nowrap; }
-.state { margin: .5rem 0; }
+.when { flex: none; font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
+.state { margin: var(--s-2) 0; }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 </style>

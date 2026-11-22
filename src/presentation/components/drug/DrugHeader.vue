@@ -62,17 +62,18 @@ const loginTarget = computed(() => ({ name: 'auth', query: { redirect: `/drugs/$
 </template>
 
 <style scoped>
-.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-5); padding: var(--s-5); }
 .main { flex: 1; min-width: 0; }
-.title { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3); }
 h1 { margin: 0; overflow-wrap: anywhere; }
-.meta { margin: .35rem 0 0; font-size: .88rem; }
-.meta > span + span { margin-left: .25rem; }
-.about { margin: .6rem 0 0; font-size: .9rem; max-width: 70ch; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.follow { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; flex: none; }
+.meta { margin: var(--s-2) 0 0; font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--ink-2); }
+.meta > span + span { margin-left: var(--s-1); }
+.about { margin: var(--s-3) 0 0; font-size: var(--fs-md); color: var(--ink-2); max-width: 70ch; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.follow { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-1); flex: none; }
 .btn { text-decoration: none; display: inline-block; }
 .btn:disabled { opacity: .6; cursor: progress; }
-.btn.login { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
-.error { margin: 0; font-size: .82rem; color: var(--coral); }
-@media (max-width: 640px) { .header { flex-direction: column; } .follow { align-items: flex-start; } }
+.btn.login { background: transparent; color: var(--accent); border-color: var(--line-strong); }
+.btn.login:hover { background: var(--accent-soft); border-color: var(--accent); }
+.error { margin: 0; font-size: var(--fs-sm); color: var(--coral); }
+@media (max-width: 640px) { .header { flex-direction: column; padding: var(--s-4); } .follow { align-items: flex-start; } }
 </style>

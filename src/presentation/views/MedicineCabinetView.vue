@@ -86,19 +86,19 @@ async function dismissAll() {
 </template>
 
 <style scoped>
-.intro { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.intro p { margin: .25rem 0 0; }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: 1.25rem; align-items: start; }
-.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
-.chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: .3rem .85rem; font: inherit; font-size: .88rem; cursor: pointer; }
-.chip:hover { border-color: var(--teal); }
-.chip.active { background: var(--teal); border-color: var(--teal); color: #fff; }
-.chip .n { opacity: .75; margin-left: .15rem; }
-.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
-.none { margin: .5rem 0; }
-.empty h2 { font-size: 1.1rem; margin: 0 0 .25rem; }
-.empty p { margin: 0 0 .75rem; }
+.intro { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+.intro p { margin: var(--s-1) 0 0; color: var(--ink-2); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); gap: var(--s-5); align-items: start; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-4); }
+.chip { border: 1px solid var(--line-strong); background: var(--card); color: var(--ink-2); border-radius: var(--radius-sm); padding: .3rem .75rem; font: inherit; font-size: var(--fs-md); font-weight: 500; cursor: pointer; transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast); }
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.chip .n { font-family: var(--font-mono); font-size: var(--fs-sm); opacity: .8; margin-left: var(--s-1); }
+.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.none { margin: var(--s-2) 0; }
+.empty h2 { margin: 0 0 var(--s-1); }
+.empty p { margin: 0 0 var(--s-3); color: var(--ink-2); }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 </style>

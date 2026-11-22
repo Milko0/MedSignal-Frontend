@@ -64,14 +64,15 @@ async function submit() {
 </template>
 
 <style scoped>
-form { display: flex; flex-direction: column; gap: .4rem; }
+form { display: flex; flex-direction: column; gap: var(--s-1); }
 h2, form p { margin: 0; }
-label { font-size: .85rem; font-weight: 600; margin-top: .4rem; }
-input { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; max-width: 28rem; }
+label { font-size: var(--fs-sm); font-weight: 500; color: var(--ink-2); margin-top: var(--s-2); }
+input { padding: .5rem .75rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); max-width: 28rem; }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 input[aria-invalid='true'] { border-color: var(--coral); }
-.error { color: var(--coral); font-size: .85rem; }
-.banner { background: var(--coral-soft); border-radius: 8px; padding: .5rem .7rem; max-width: 28rem; }
-.actions { display: flex; align-items: center; gap: .8rem; margin-top: .8rem; }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
-.ok { color: var(--green); font-size: .9rem; }
+.error { color: var(--coral); font-size: var(--fs-sm); }
+.banner { background: var(--coral-soft); color: var(--coral); border-radius: var(--radius-sm); padding: var(--s-2) var(--s-3); font-size: var(--fs-md); max-width: 28rem; }
+.actions { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-4); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.ok { color: var(--green); font-size: var(--fs-md); }
 </style>

@@ -34,13 +34,12 @@ const active = computed(() => isInShortage(props.shortage.status))
 </template>
 
 <style scoped>
-.card { border-left: 4px solid var(--green); }
-.card.active { border-left-color: var(--amber); }
-h2 { font-size: .85rem; margin: 0 0 .4rem; color: var(--muted); font-weight: 600; }
-.title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+h2 { font-family: var(--font); font-size: var(--fs-sm); font-weight: 500; letter-spacing: .02em; margin: 0 0 var(--s-2); color: var(--ink-2); }
+.title { margin: 0; font-size: var(--fs-lg); font-weight: 600; line-height: 1.3; }
 .card.active .title { color: var(--amber); }
-.muted { margin: .2rem 0 0; font-size: .9rem; }
-dl { margin: .75rem 0 0; font-size: .86rem; display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem; }
-dt { color: var(--muted); }
+.card.active .title::before { content: ''; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--amber); margin-right: var(--s-2); vertical-align: .15em; }
+.muted { margin: var(--s-1) 0 0; font-size: var(--fs-md); }
+dl { margin: var(--s-3) 0 0; font-size: var(--fs-sm); display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-3); }
+dt { color: var(--ink-2); }
 dd { margin: 0; overflow-wrap: anywhere; }
 </style>

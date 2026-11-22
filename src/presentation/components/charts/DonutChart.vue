@@ -6,7 +6,7 @@ import { COLORS } from './plotlyTheme'
 const props = defineProps({ values: { type: Object, default: () => ({}) } }) // percentages {Female: 49.3, Male: 31.8, Unknown: 18.9}
 const data = computed(() => [{
   type: 'pie', hole: 0.62, labels: Object.keys(props.values), values: Object.values(props.values),
-  marker: { colors: [COLORS.teal, COLORS.slate, '#d5dde0'] }, textinfo: 'percent', sort: false,
+  marker: { colors: [COLORS.teal, COLORS.slate, COLORS.faint] }, textinfo: 'percent', sort: false,
   hovertemplate: '%{label}: %{value}%<extra></extra>',
 }])
 </script>

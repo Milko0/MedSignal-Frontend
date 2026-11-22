@@ -29,11 +29,11 @@ const updated = computed(() => formatDate(props.label.effectiveDate))
 </template>
 
 <style scoped>
-h2 { font-size: .85rem; margin: 0 0 .4rem; color: var(--muted); font-weight: 600; }
-.title { margin: 0; font-size: 1.05rem; font-weight: 600; }
-p.muted { margin: 0; }
-dl { margin: .75rem 0 0; font-size: .86rem; display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem; }
-dt { color: var(--muted); }
+h2 { font-family: var(--font); font-size: var(--fs-sm); font-weight: 500; letter-spacing: .02em; margin: 0 0 var(--s-2); color: var(--ink-2); }
+.title { margin: 0; font-size: var(--fs-lg); font-weight: 600; line-height: 1.3; }
+p.muted { margin: 0; font-size: var(--fs-md); }
+dl { margin: var(--s-3) 0 0; font-size: var(--fs-sm); display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-3); }
+dt { color: var(--ink-2); }
 dd { margin: 0; }
 .yes { color: var(--coral); font-weight: 600; }
 </style>

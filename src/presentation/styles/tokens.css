@@ -1,12 +1,37 @@
 :root {
-  /* Palette from the mock-ups: teal actions, amber shortage, coral safety signals, green available */
-  --teal: #1b7c8c;       --teal-soft: #e1f0f2;
-  --amber: #b7791f;      --amber-soft: #fbf0dc;
-  --coral: #c0453a;      --coral-soft: #fbe9e6;
-  --green: #2f855a;      --green-soft: #e3f3ea;
-  --slate: #5b6b73;      --slate-soft: #eceff1;
-  --ink: #17323b;        --muted: #5f747c;
-  --bg: #f3f7f8;         --card: #ffffff;   --line: #dbe5e8;
-  --radius: 10px;
-  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Surfaces and text: warm paper, one dominant ink */
+  --bg: #f6f5f1;         --card: #ffffff;
+  --ink: #1a2630;        --ink-2: #4a5862;   --muted: #5d6a73;
+  --line: #e3e1da;       --line-strong: #cfccc3;
+
+  /* Brand / action accent: the only colour that means "you can act on this" */
+  --accent: #2140a8;     --accent-strong: #1a3389;   --accent-soft: #e8ecf8;   --on-accent: #ffffff;
+
+  /* Semantic tones (never used for actions). Text on its -soft background passes WCAG AA (>= 5.4:1).
+     coral = safety signal, amber = shortage, green = available, teal = label / information, slate = recall, below threshold */
+  --coral: #a8362b;      --coral-soft: #f9e7e4;
+  --amber: #85570c;      --amber-soft: #f8eed9;
+  --green: #22693f;      --green-soft: #e2f1e8;
+  --teal: #1d6672;       --teal-soft: #e0eff1;
+  --slate: #4f5d66;      --slate-soft: #eceef0;
+
+  /* Type */
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --fs-xs: .75rem;  --fs-sm: .8125rem;  --fs-md: .875rem;  --fs-base: 1rem;  --fs-lg: 1.25rem;  --fs-xl: 1.75rem;
+
+  /* Spacing (4px base) */
+  --s-1: .25rem;  --s-2: .5rem;  --s-3: .75rem;  --s-4: 1rem;  --s-5: 1.5rem;  --s-6: 2rem;  --s-7: 3rem;
+
+  /* Shape and depth */
+  --radius: 6px;         --radius-sm: 4px;
+  --shadow: 0 1px 2px rgb(26 38 48 / 6%), 0 6px 20px rgb(26 38 48 / 10%);
+  --scrim: rgb(26 38 48 / 40%);
+
+  /* Motion: feedback only */
+  --t-fast: 120ms;  --t-med: 180ms;
 }
+
+/* Chart data hues (mirrored in components/charts/plotlyTheme.js, which cannot read CSS variables) */
+:root { --chart-1: #3d5a73; --chart-2: #7a6a8c; --chart-3: #5f8a6e; --chart-4: #b39a6b; }

@@ -42,14 +42,15 @@ const subtitle = computed(() => {
 </template>
 
 <style scoped>
-.row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: .75rem 1rem; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--s-3) var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--radius); background: var(--card); box-shadow: 0 1px 0 var(--line); }
 .main { min-width: 0; }
 .name { font-weight: 600; overflow-wrap: anywhere; }
-.sub { margin: .15rem 0 0; font-size: .85rem; overflow-wrap: anywhere; }
-.status { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; }
-.when { font-size: .75rem; white-space: nowrap; }
-.actions .btn { font-size: .85rem; padding: .35rem .8rem; }
-.confirm { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
-.btn.danger { background: var(--coral); }
+.sub { margin: .125rem 0 0; font-size: var(--fs-md); color: var(--ink-2); overflow-wrap: anywhere; }
+.status { display: flex; flex-direction: column; align-items: flex-end; gap: var(--s-1); }
+.when { font-size: var(--fs-xs); white-space: nowrap; }
+.actions .btn { font-size: var(--fs-sm); padding: .375rem .75rem; }
+.confirm { display: flex; align-items: center; gap: var(--s-2); font-size: var(--fs-md); }
+.btn.danger { background: var(--coral); border-color: var(--coral); }
+.btn.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--coral) 85%, var(--ink)); border-color: color-mix(in srgb, var(--coral) 85%, var(--ink)); }
 @media (max-width: 640px) { .row { grid-template-columns: 1fr auto; } .actions { grid-column: 1 / -1; } .status { align-items: flex-end; } }
 </style>

@@ -91,19 +91,21 @@ const hasNext = computed(() => props.page < props.totalPages)
 </template>
 
 <style scoped>
-.scroll { overflow-x: auto; transition: opacity .15s; }
+.scroll { overflow-x: auto; transition: opacity var(--t-fast); }
 .scroll.dim { opacity: .55; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th { text-align: left; font-size: .78rem; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: .5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.sort { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; }
-.sort:hover { color: var(--ink); }
-.reaction { overflow-wrap: anywhere; }
-.emerging { margin-left: .4rem; background: var(--coral-soft); color: var(--coral); border-radius: 999px; padding: 0 .5rem; font-size: .72rem; white-space: nowrap; }
-.reports { background: none; border: 1px solid var(--teal); color: var(--teal); border-radius: 8px; padding: .25rem .6rem; font: inherit; font-size: .82rem; cursor: pointer; white-space: nowrap; }
-.reports:hover { background: var(--teal-soft); }
-.pager { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: .9rem; }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+th { text-align: left; font-weight: 500; font-size: var(--fs-xs); letter-spacing: .02em; color: var(--ink-2); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+td { padding: .625rem var(--s-3); border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+td.num { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.sort { background: none; border: 0; padding: 0; font: inherit; font-weight: 500; color: inherit; cursor: pointer; transition: color var(--t-fast); }
+.sort:hover { color: var(--accent); }
+.reaction { overflow-wrap: anywhere; min-width: 10rem; }
+.emerging { margin-left: var(--s-2); border: 1px solid color-mix(in srgb, var(--coral) 45%, transparent); color: var(--coral); border-radius: var(--radius-sm); padding: 0 .375rem; font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; }
+.reports { background: none; border: 1px solid var(--line-strong); color: var(--accent); border-radius: var(--radius-sm); padding: .25rem .625rem; font: inherit; font-size: var(--fs-sm); font-weight: 500; cursor: pointer; white-space: nowrap; transition: background-color var(--t-fast), border-color var(--t-fast); }
+.reports:hover { background: var(--accent-soft); border-color: var(--accent); }
+.pager { display: flex; align-items: center; justify-content: center; gap: var(--s-4); margin-top: var(--s-4); font-size: var(--fs-md); }
 .pager .btn:disabled { opacity: .45; cursor: not-allowed; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>

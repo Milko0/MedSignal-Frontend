@@ -89,19 +89,20 @@ const hint = computed(() => HINTS[props.modelValue.tab] ?? '')
 </template>
 
 <style scoped>
-.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem 1rem; align-items: end; }
-.field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--s-3) var(--s-4); align-items: end; }
+.field { display: flex; flex-direction: column; gap: var(--s-1); min-width: 0; }
 .field.drug { grid-column: span 2; }
 .field.off { opacity: .55; }
-.label, label { font-size: .78rem; color: var(--muted); font-weight: 600; }
-input, select { width: 100%; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--card); color: var(--ink); }
+.label, label { font-size: var(--fs-xs); color: var(--ink-2); font-weight: 500; letter-spacing: .02em; }
+input, select { width: 100%; padding: .5rem .625rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 input:disabled, select:disabled { background: var(--slate-soft); cursor: not-allowed; }
-.chosen { display: flex; align-items: center; gap: .4rem; }
-.pill { background: var(--teal-soft); color: var(--teal); border-radius: 999px; padding: .3rem .75rem; font-size: .88rem; overflow-wrap: anywhere; }
-.clear { border: 0; background: none; font-size: 1.2rem; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 .3rem; }
-.clear:hover:not(:disabled) { color: var(--coral); }
-.pairs { justify-content: flex-end; padding-bottom: .4rem; }
-.actions { display: flex; gap: .5rem; }
-.hint { grid-column: 1 / -1; margin: 0; font-size: .82rem; }
+.chosen { display: flex; align-items: center; gap: var(--s-2); }
+.pill { background: var(--accent-soft); color: var(--accent); border-radius: var(--radius-sm); padding: .3rem .625rem; font-size: var(--fs-md); font-weight: 500; overflow-wrap: anywhere; }
+.clear { border: 0; background: none; font-size: 1.2rem; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 var(--s-1); border-radius: var(--radius-sm); transition: color var(--t-fast); }
+.clear:hover:not(:disabled) { color: var(--ink); }
+.pairs { justify-content: flex-end; padding-bottom: var(--s-2); }
+.actions { display: flex; gap: var(--s-2); }
+.hint { grid-column: 1 / -1; margin: 0; font-size: var(--fs-sm); }
 @media (max-width: 640px) { .field.drug { grid-column: auto; } }
 </style>

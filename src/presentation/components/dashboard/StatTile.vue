@@ -15,12 +15,13 @@ defineProps({
 </template>
 
 <style scoped>
-.tile { display: flex; flex-direction: column; gap: .15rem; padding: .85rem 1rem; border-left-width: 4px; }
-.value { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
-.label { font-size: .82rem; }
-.teal { border-left-color: var(--teal); }
-.amber { border-left-color: var(--amber); }
-.coral { border-left-color: var(--coral); }
-.green { border-left-color: var(--green); }
-.slate { border-left-color: var(--slate); }
+.tile { --tone: var(--slate); display: flex; flex-direction: column; gap: var(--s-1); padding: var(--s-4) var(--s-5); }
+.value { font-family: var(--font-mono); font-size: var(--fs-xl); font-weight: 500; line-height: 1.1; letter-spacing: -.02em; color: var(--ink); }
+.label { font-size: var(--fs-sm); color: var(--ink-2); }
+.label::before { content: ''; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--tone); margin-right: var(--s-2); vertical-align: .05em; }
+.teal { --tone: var(--teal); }
+.amber { --tone: var(--amber); }
+.coral { --tone: var(--coral); }
+.green { --tone: var(--green); }
+.slate { --tone: var(--slate); }
 </style>

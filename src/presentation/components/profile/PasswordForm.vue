@@ -78,16 +78,18 @@ const FIELDS = [
 </template>
 
 <style scoped>
-.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-4); flex-wrap: wrap; }
 h2, .head p { margin: 0; }
-form { display: flex; flex-direction: column; gap: .4rem; margin-top: .8rem; }
+.head p { font-size: var(--fs-md); color: var(--ink-2); }
+form { display: flex; flex-direction: column; gap: var(--s-1); margin-top: var(--s-4); }
 form p { margin: 0; }
-label { font-size: .85rem; font-weight: 600; margin-top: .4rem; }
-input { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; max-width: 28rem; }
+label { font-size: var(--fs-sm); font-weight: 500; color: var(--ink-2); margin-top: var(--s-2); }
+input { padding: .5rem .75rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); max-width: 28rem; }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 input[aria-invalid='true'] { border-color: var(--coral); }
-.error { color: var(--coral); font-size: .85rem; }
-.banner { background: var(--coral-soft); border-radius: 8px; padding: .5rem .7rem; max-width: 28rem; }
-.actions { display: flex; gap: .6rem; margin-top: .8rem; }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
-.ok { color: var(--green); font-size: .9rem; margin: .6rem 0 0; }
+.error { color: var(--coral); font-size: var(--fs-sm); }
+.banner { background: var(--coral-soft); color: var(--coral); border-radius: var(--radius-sm); padding: var(--s-2) var(--s-3); font-size: var(--fs-md); max-width: 28rem; }
+.actions { display: flex; gap: var(--s-3); margin-top: var(--s-4); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.ok { color: var(--green); font-size: var(--fs-md); margin: var(--s-3) 0 0; }
 </style>

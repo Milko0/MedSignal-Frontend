@@ -54,14 +54,16 @@ const same = computed(() => [props.alternatives.targetDosageForm, ...props.alter
 </template>
 
 <style scoped>
-.caption { margin: 0 0 .6rem; font-size: .85rem; }
-.empty { margin: .5rem 0; }
+.caption { margin: 0 0 var(--s-3); font-size: var(--fs-md); color: var(--ink-2); }
+.empty { margin: var(--s-2) 0; }
 .scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: .5rem; border-bottom: 1px solid var(--line); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.row { cursor: pointer; }
-.row:hover { background: var(--teal-soft); }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+th { text-align: left; font-weight: 500; font-size: var(--fs-xs); letter-spacing: .02em; color: var(--ink-2); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+td { padding: .625rem var(--s-3); border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+td.num { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.row { cursor: pointer; transition: background-color var(--t-fast); }
+.row:hover { background: var(--accent-soft); }
 .self { background: var(--slate-soft); }
 </style>

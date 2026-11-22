@@ -91,28 +91,30 @@ onBeforeUnmount(() => { if (props.drawer.open && opener?.isConnected) opener.foc
 
 <style scoped>
 .overlay { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: flex-end; }
-.backdrop { position: absolute; inset: 0; background: rgb(23 50 59 / 40%); }
-.panel { position: relative; width: min(480px, 100%); height: 100%; background: var(--card); box-shadow: -6px 0 24px rgb(23 50 59 / 18%); display: flex; flex-direction: column; outline: none; }
-.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1rem 1.25rem .75rem; border-bottom: 1px solid var(--line); }
-h2 { font-size: 1.05rem; margin: 0; overflow-wrap: anywhere; }
-.count { margin: .2rem 0 0; font-size: .85rem; }
-.close { border: 0; background: none; font-size: 1.6rem; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 .3rem; }
+.backdrop { position: absolute; inset: 0; background: var(--scrim); animation: fade var(--t-med) ease-out; }
+.panel { position: relative; width: min(480px, 100%); height: 100%; background: var(--card); box-shadow: var(--shadow); display: flex; flex-direction: column; outline: none; animation: slide var(--t-med) ease-out; }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-4); padding: var(--s-4) var(--s-5) var(--s-3); border-bottom: 1px solid var(--line); }
+h2 { font-size: var(--fs-lg); margin: 0; overflow-wrap: anywhere; }
+.count { margin: var(--s-1) 0 0; font-size: var(--fs-md); color: var(--ink-2); }
+.close { border: 0; background: none; font-size: 1.5rem; line-height: 1; color: var(--muted); cursor: pointer; padding: 0 var(--s-1); border-radius: var(--radius-sm); transition: color var(--t-fast); }
 .close:hover { color: var(--ink); }
-.body { flex: 1; overflow-y: auto; padding: .75rem 1.25rem; }
-.state { margin: .5rem 0; }
+.body { flex: 1; overflow-y: auto; padding: var(--s-3) var(--s-5); }
+.state { margin: var(--s-2) 0; }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; transition: opacity .15s; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); transition: opacity var(--t-fast); }
 .list.dim { opacity: .5; }
-.report { border: 1px solid var(--line); border-radius: var(--radius); padding: .65rem .8rem; }
-.top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.id { margin-left: auto; font-size: .75rem; }
-dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem .75rem; margin: .5rem 0 0; font-size: .86rem; }
-dt { color: var(--muted); }
+.report { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s-3) var(--s-4); }
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); font-size: var(--fs-md); }
+.id { margin-left: auto; font-family: var(--font-mono); font-size: var(--fs-xs); }
+dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-3); margin: var(--s-2) 0 0; font-size: var(--fs-sm); }
+dt { color: var(--ink-2); }
 dd { margin: 0; }
-.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem; }
-.tags li { background: var(--slate-soft); border-radius: 6px; padding: 0 .4rem; overflow-wrap: anywhere; }
-.foot { padding: .5rem 1.25rem 1rem; border-top: 1px solid var(--line); }
-.pager { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.tags li { background: var(--slate-soft); border-radius: var(--radius-sm); padding: 0 .375rem; overflow-wrap: anywhere; }
+.foot { padding: var(--s-2) var(--s-5) var(--s-4); border-top: 1px solid var(--line); }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); font-size: var(--fs-md); }
 .pager .btn:disabled { opacity: .45; cursor: not-allowed; }
+@keyframes slide { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 </style>

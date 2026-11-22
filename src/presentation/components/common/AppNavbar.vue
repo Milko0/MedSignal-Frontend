@@ -69,15 +69,21 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.nav { display: flex; align-items: center; gap: 1.25rem; padding: .75rem 1.5rem; background: var(--card); border-bottom: 1px solid var(--line); }
-.brand { font-weight: 700; color: var(--teal); }
-nav { display: flex; gap: 1rem; flex: 1; }
-nav a.router-link-exact-active { color: var(--ink); font-weight: 600; }
+.nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-5); padding: .625rem var(--s-5); background: var(--card); border-bottom: 1px solid var(--line); }
+.brand { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
+.brand:hover { text-decoration: none; }
+nav { display: flex; gap: var(--s-5); flex: 1; }
+nav a { color: var(--ink-2); font-size: var(--fs-md); font-weight: 500; white-space: nowrap; padding: var(--s-1) 0; border-bottom: 2px solid transparent; transition: color var(--t-fast), border-color var(--t-fast); }
+nav a:hover { color: var(--ink); text-decoration: none; }
+nav a.router-link-exact-active { color: var(--ink); border-bottom-color: var(--accent); }
+nav b { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; background: var(--slate-soft); color: var(--ink); border-radius: var(--radius-sm); padding: 0 .375rem; margin-left: var(--s-1); }
 .account { position: relative; }
-.avatar { background: var(--teal-soft); color: var(--ink); border: 0; border-radius: 50%; width: 2rem; height: 2rem; display: grid; place-items: center; font: inherit; font-size: .8rem; cursor: pointer; }
-.menu { position: absolute; right: 0; top: calc(100% + .4rem); min-width: 10rem; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: .35rem; box-shadow: 0 4px 14px rgb(23 50 59 / 12%); z-index: 10; }
-.menu a, .menu button { padding: .45rem .6rem; border: 0; background: none; border-radius: 6px; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
-.menu a:hover, .menu button:hover { background: var(--teal-soft); }
-.who { margin: 0; padding: .4rem .6rem; font-size: .8rem; color: var(--muted); border-bottom: 1px solid var(--line); }
-.tag { background: var(--amber-soft); color: var(--amber); border-radius: 999px; padding: 0 .4rem; margin-left: .3rem; }
+.avatar { background: var(--accent-soft); color: var(--accent); border: 0; border-radius: 50%; width: 2rem; height: 2rem; display: grid; place-items: center; font: inherit; font-size: var(--fs-xs); font-weight: 600; cursor: pointer; transition: background-color var(--t-fast); }
+.avatar:hover { background: color-mix(in srgb, var(--accent) 18%, var(--card)); }
+.menu { position: absolute; right: 0; top: calc(100% + var(--s-2)); min-width: 10rem; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s-1); box-shadow: var(--shadow); z-index: 10; }
+.menu a, .menu button { padding: var(--s-2) var(--s-3); border: 0; background: none; border-radius: var(--radius-sm); text-align: left; font: inherit; font-size: var(--fs-md); color: var(--ink); cursor: pointer; }
+.menu a:hover, .menu button:hover { background: var(--accent-soft); text-decoration: none; }
+.who { margin: 0; padding: var(--s-2) var(--s-3); font-size: var(--fs-sm); color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.tag { background: var(--amber-soft); color: var(--amber); border-radius: var(--radius-sm); padding: 0 .375rem; margin-left: var(--s-1); font-size: var(--fs-xs); font-weight: 500; }
+@media (max-width: 640px) { .nav { padding: var(--s-2) var(--s-4); gap: var(--s-2) var(--s-4); } nav { gap: var(--s-4); } }
 </style>

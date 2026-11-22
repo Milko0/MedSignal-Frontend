@@ -12,8 +12,9 @@ const valid = computed(() => Number.isFinite(props.prr))
 </template>
 
 <style scoped>
-.badge { display: inline-block; min-width: 2.6rem; text-align: center; padding: .1rem .5rem; border-radius: 6px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.coral { background: var(--coral-soft); color: var(--coral); }
-.amber { background: var(--amber-soft); color: var(--amber); }
-.slate { background: var(--slate-soft); color: var(--slate); }
+/* Weight follows strength: below 2 plain figure, 2-3 outlined, 3+ filled. Never solid red: a signal is not proof. */
+.badge { display: inline-block; min-width: 3rem; text-align: right; padding: .0625rem .4rem; border: 1px solid transparent; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 400; }
+.slate { color: var(--ink-2); }
+.amber { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 45%, transparent); font-weight: 500; }
+.coral { color: var(--coral); background: var(--coral-soft); border-color: color-mix(in srgb, var(--coral) 30%, transparent); font-weight: 600; }
 </style>

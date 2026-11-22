@@ -142,20 +142,23 @@ function onFocusOut(e) {
 
 <style scoped>
 .search { flex: 1; }
+.search.compact { flex: 0 1 260px; min-width: 9rem; }
 .box { position: relative; }
-.row { display: flex; gap: .5rem; }
-input { width: 100%; padding: .6rem .8rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
-.compact input { max-width: 260px; padding: .4rem .6rem; }
-.panel { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin-top: .25rem; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 4px 14px rgb(23 50 59 / 12%); overflow: hidden; }
+.row { display: flex; gap: var(--s-2); }
+input { width: 100%; padding: .625rem .875rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.compact input { max-width: 260px; padding: .4rem .625rem; font-size: var(--fs-sm); }
+.panel { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin-top: var(--s-1); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .compact .panel { right: auto; width: 320px; max-width: 90vw; }
-.option { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .6rem; padding: .5rem .8rem; cursor: pointer; }
-.option.active { background: var(--teal-soft); }
+.option { display: flex; flex-wrap: wrap; align-items: baseline; gap: .125rem var(--s-2); padding: var(--s-2) var(--s-3); cursor: pointer; font-size: var(--fs-md); }
+.option.active { background: var(--accent-soft); }
 .name { font-weight: 600; }
-.brands, .matched { font-size: .82rem; }
-.matched { color: var(--teal); }
-.state { margin: 0; padding: .7rem .8rem; font-size: .9rem; }
+.brands, .matched { font-size: var(--fs-sm); }
+.matched { color: var(--ink-2); font-style: italic; }
+.state { margin: 0; padding: var(--s-3); font-size: var(--fs-md); }
 .state.error { color: var(--coral); }
-.try { margin: .5rem 0 0; font-size: .85rem; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
-.chip { background: var(--teal-soft); color: var(--teal); border: 0; border-radius: 999px; padding: .15rem .65rem; font: inherit; font-size: .82rem; cursor: pointer; }
-.chip:hover { background: var(--teal); color: #fff; }
+.try { margin: var(--s-2) 0 0; font-size: var(--fs-md); color: var(--ink-2); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.chip { background: none; color: var(--accent); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); padding: .125rem .5rem; font: inherit; font-size: var(--fs-sm); cursor: pointer; transition: background-color var(--t-fast), border-color var(--t-fast); }
+.chip:hover { background: var(--accent-soft); border-color: var(--accent); }
+@media (max-width: 640px) { .search.compact { flex: 1 1 10rem; } }
 </style>

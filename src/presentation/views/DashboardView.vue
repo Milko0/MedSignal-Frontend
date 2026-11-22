@@ -58,10 +58,10 @@ onMounted(() => dash.load())
 </template>
 
 <style scoped>
-.intro { margin-bottom: 1rem; }
-.intro p { margin: .25rem 0 0; }
-.search { margin-bottom: 1.25rem; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-.cta { display: flex; align-items: center; margin: 0; font-size: .92rem; }
+.intro { margin-bottom: var(--s-5); }
+.intro p { margin: var(--s-1) 0 0; color: var(--ink-2); max-width: 60ch; }
+.search { margin-bottom: var(--s-5); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-4); margin-bottom: var(--s-4); }
+.cta { display: block; align-self: stretch; margin: 0; padding: var(--s-4) var(--s-5); font-size: var(--fs-md); color: var(--ink-2); }
 .cards { align-items: start; }
 </style>

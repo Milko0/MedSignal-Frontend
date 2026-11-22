@@ -44,5 +44,5 @@ const label = computed(() => `Trend: ${points.value.map((p) => p.value).join(', 
 </template>
 
 <style scoped>
-.sparkline { color: var(--coral); vertical-align: middle; overflow: visible; }
+.sparkline { color: var(--ink-2); vertical-align: middle; overflow: visible; }
 </style>

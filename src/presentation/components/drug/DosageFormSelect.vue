@@ -26,7 +26,8 @@ const id = `form-${Math.random().toString(36).slice(2, 8)}`
 </template>
 
 <style scoped>
-.select { display: inline-flex; align-items: center; gap: .5rem; font-size: .88rem; }
-label { color: var(--muted); }
-select { padding: .35rem .6rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--card); color: var(--ink); }
+.select { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-md); }
+label { color: var(--ink-2); }
+select { padding: .375rem .625rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 </style>

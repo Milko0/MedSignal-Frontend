@@ -24,7 +24,7 @@ const data = computed(() => [{
 const layout = {
   margin: { t: 8, r: 12, b: 28, l: 8 },
   yaxis: { automargin: true, gridcolor: 'rgba(0,0,0,0)', zeroline: false },
-  xaxis: { gridcolor: '#e6eef0', zeroline: false },
+  xaxis: { gridcolor: COLORS.grid, zeroline: false },
 }
 </script>
 

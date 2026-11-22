@@ -39,12 +39,12 @@ const partial = computed(() => props.recalls.linkedShare < 1)
 </template>
 
 <style scoped>
-h2 { font-size: .85rem; margin: 0 0 .4rem; color: var(--muted); font-weight: 600; }
-.total { margin: 0; font-size: 1.05rem; }
-.classes { list-style: none; margin: .75rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
-.classes li { display: flex; flex-direction: column; align-items: center; min-width: 4.4rem; padding: .4rem .6rem; border-radius: 8px; background: var(--slate-soft); font-size: .78rem; }
-.n { font-size: 1.3rem; font-weight: 700; line-height: 1.1; }
+h2 { font-family: var(--font); font-size: var(--fs-sm); font-weight: 500; letter-spacing: .02em; margin: 0 0 var(--s-2); color: var(--ink-2); }
+.total { margin: 0; font-size: var(--fs-base); }
+.classes { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.classes li { display: flex; flex-direction: column; align-items: center; min-width: 4.5rem; padding: var(--s-2) var(--s-3); border-radius: var(--radius-sm); background: var(--slate-soft); color: var(--ink-2); font-size: var(--fs-xs); }
+.n { font-family: var(--font-mono); font-size: var(--fs-lg); font-weight: 500; line-height: 1.2; color: var(--ink); }
 .classes .coral { background: var(--coral-soft); } .classes .coral .n { color: var(--coral); }
 .classes .amber { background: var(--amber-soft); } .classes .amber .n { color: var(--amber); }
-.note { margin: .75rem 0 0; font-size: .8rem; }
+.note { margin: var(--s-3) 0 0; font-size: var(--fs-xs); }
 </style>

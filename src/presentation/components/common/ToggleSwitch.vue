@@ -31,12 +31,12 @@ const toggleWithEnter = (e) => e.target.click()
 </template>
 
 <style scoped>
-.toggle { display: inline-flex; align-items: flex-start; gap: .6rem; cursor: pointer; }
+.toggle { display: inline-flex; align-items: flex-start; gap: var(--s-3); cursor: pointer; }
 .toggle.off { cursor: not-allowed; opacity: .55; }
-input { appearance: none; flex: none; position: relative; width: 2.3rem; height: 1.3rem; margin: .1rem 0 0; border-radius: 999px; background: var(--line); cursor: inherit; transition: background .15s; }
-input::after { content: ''; position: absolute; top: .15rem; left: .15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform .15s; }
-input:checked { background: var(--teal); }
+input { appearance: none; flex: none; position: relative; width: 2.25rem; height: 1.25rem; margin: .125rem 0 0; border-radius: 999px; background: var(--line-strong); cursor: inherit; transition: background-color var(--t-fast); }
+input::after { content: ''; position: absolute; top: .125rem; left: .125rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--card); box-shadow: 0 1px 2px rgb(26 38 48 / 20%); transition: transform var(--t-fast); }
+input:checked { background: var(--accent); }
 input:checked::after { transform: translateX(1rem); }
-.text { display: flex; flex-direction: column; min-width: 0; }
-.hint { font-size: .82rem; color: var(--muted); }
+.text { display: flex; flex-direction: column; min-width: 0; font-size: var(--fs-md); }
+.hint { font-size: var(--fs-sm); color: var(--ink-2); }
 </style>

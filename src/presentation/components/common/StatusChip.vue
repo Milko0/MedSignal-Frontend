@@ -20,7 +20,7 @@ const info = computed(() => {
 </template>
 
 <style scoped>
-.chip { display: inline-block; padding: .15rem .6rem; border-radius: 999px; font-size: .78rem; }
+.chip { display: inline-block; padding: .125rem .5rem; border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: 500; line-height: 1.5; letter-spacing: .01em; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent); }
 .teal { background: var(--teal-soft); color: var(--teal); }
 .amber { background: var(--amber-soft); color: var(--amber); }
 .coral { background: var(--coral-soft); color: var(--coral); }

@@ -37,15 +37,15 @@ const auth = useAuthStore()
 </template>
 
 <style scoped>
-.layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 1.25rem; align-items: start; margin-top: 1rem; }
-.menu { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: .15rem; }
-.menu a { padding: .45rem .75rem; border-radius: 8px; color: var(--ink); }
-.menu a:hover { background: var(--teal-soft); color: var(--teal); }
-.sections { display: grid; gap: 1rem; min-width: 0; }
-.stack { display: grid; gap: 1rem; }
-.sections section { scroll-margin-top: 1rem; }
+.layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--s-5); align-items: start; margin-top: var(--s-4); }
+.menu { position: sticky; top: var(--s-4); display: flex; flex-direction: column; gap: .125rem; }
+.menu a { padding: var(--s-2) var(--s-3); border-radius: var(--radius-sm); color: var(--ink-2); font-size: var(--fs-md); font-weight: 500; transition: background-color var(--t-fast), color var(--t-fast); }
+.menu a:hover { background: var(--accent-soft); color: var(--accent); text-decoration: none; }
+.sections { display: grid; gap: var(--s-4); min-width: 0; }
+.stack { display: grid; gap: var(--s-4); }
+.sections section { scroll-margin-top: var(--s-4); }
 .error { color: var(--coral); }
-.link { background: none; border: 0; padding: 0; color: var(--teal); font: inherit; text-decoration: underline; cursor: pointer; }
+.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 @media (max-width: 760px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .menu { position: static; flex-direction: row; flex-wrap: wrap; }

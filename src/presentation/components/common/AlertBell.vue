@@ -59,17 +59,18 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .bell { position: relative; }
-.btn-bell { position: relative; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border: 0; border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
-.btn-bell:hover { background: var(--teal-soft); }
-.dot { position: absolute; top: -.15rem; right: -.2rem; min-width: 1.05rem; height: 1.05rem; padding: 0 .25rem; border-radius: 999px; background: var(--coral); color: #fff; font-size: .68rem; font-weight: 700; display: grid; place-items: center; line-height: 1; }
-.menu { position: absolute; right: 0; top: calc(100% + .4rem); width: min(360px, 92vw); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 4px 14px rgb(23 50 59 / 12%); z-index: 30; padding: .35rem; }
-.none { margin: 0; padding: .7rem .6rem; font-size: .9rem; }
+.btn-bell { position: relative; display: grid; place-items: center; width: 2.125rem; height: 2.125rem; border: 0; border-radius: 50%; background: none; color: var(--ink-2); cursor: pointer; transition: background-color var(--t-fast), color var(--t-fast); }
+.btn-bell:hover { background: var(--accent-soft); color: var(--ink); }
+.dot { position: absolute; top: -.125rem; right: -.25rem; min-width: 1.125rem; height: 1.125rem; padding: 0 .25rem; border-radius: 999px; background: var(--ink); color: var(--card); box-shadow: 0 0 0 2px var(--card); font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500; display: grid; place-items: center; line-height: 1; animation: pop var(--t-med) ease-out; }
+.menu { position: absolute; right: 0; top: calc(100% + var(--s-2)); width: min(360px, 92vw); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); z-index: 30; padding: var(--s-1); }
+.none { margin: 0; padding: var(--s-3); font-size: var(--fs-md); }
 ul { list-style: none; margin: 0; padding: 0; }
-li a { display: grid; grid-template-columns: auto 1fr auto; gap: .55rem; padding: .5rem .6rem; border-radius: 6px; color: var(--ink); font-size: .86rem; }
-li a:hover, .all:hover { background: var(--teal-soft); }
-.tone { width: .6rem; height: .6rem; border-radius: 50%; margin-top: .35rem; }
+li a { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-2); padding: var(--s-2) var(--s-3); border-radius: var(--radius-sm); color: var(--ink); font-size: var(--fs-md); }
+li a:hover, .all:hover { background: var(--accent-soft); text-decoration: none; }
+.tone { width: .5rem; height: .5rem; border-radius: 50%; margin-top: .45rem; }
 .tone.teal { background: var(--teal); } .tone.amber { background: var(--amber); } .tone.coral { background: var(--coral); } .tone.green { background: var(--green); } .tone.slate { background: var(--slate); }
-.msg { display: block; font-size: .8rem; overflow-wrap: anywhere; }
-.when { font-size: .72rem; white-space: nowrap; margin-top: .15rem; }
-.all { display: block; text-align: center; padding: .5rem; border-top: 1px solid var(--line); margin-top: .25rem; border-radius: 0 0 6px 6px; font-size: .86rem; }
+.msg { display: block; font-size: var(--fs-sm); color: var(--ink-2); overflow-wrap: anywhere; }
+.when { font-size: var(--fs-xs); white-space: nowrap; margin-top: .125rem; }
+.all { display: block; text-align: center; padding: var(--s-2); border-top: 1px solid var(--line); margin-top: var(--s-1); border-radius: 0 0 var(--radius-sm) var(--radius-sm); font-size: var(--fs-md); font-weight: 500; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
 </style>

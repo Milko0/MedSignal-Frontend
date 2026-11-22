@@ -26,8 +26,8 @@ const TABS = [
 </template>
 
 <style scoped>
-.tabs { display: flex; flex-wrap: wrap; gap: .4rem; }
-.tab { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: .35rem .95rem; font: inherit; cursor: pointer; }
-.tab:hover { border-color: var(--teal); }
-.tab.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+.tabs { display: flex; flex-wrap: wrap; gap: 0 var(--s-1); border-bottom: 1px solid var(--line-strong); }
+.tab { border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-2); padding: var(--s-2) .875rem; font: inherit; font-size: var(--fs-md); font-weight: 500; cursor: pointer; border-radius: var(--radius-sm) var(--radius-sm) 0 0; transition: color var(--t-fast), border-color var(--t-fast), background-color var(--t-fast); }
+.tab:hover { color: var(--ink); background: var(--accent-soft); }
+.tab.active { color: var(--ink); border-bottom-color: var(--accent); }
 </style>

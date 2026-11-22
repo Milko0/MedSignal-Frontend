@@ -50,13 +50,15 @@ const empty = computed(() => props.data.labelAvailable && props.data.comparable 
 </template>
 
 <style scoped>
-.state, .note { margin: .5rem 0; }
-.note { font-size: .86rem; }
+.state, .note { margin: var(--s-2) 0; }
+.note { font-size: var(--fs-md); color: var(--ink-2); }
 .scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
-th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: .5rem; border-bottom: 1px solid var(--line); }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
-.reaction { overflow-wrap: anywhere; }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+th { text-align: left; font-weight: 500; font-size: var(--fs-xs); letter-spacing: .02em; color: var(--ink-2); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+td { padding: .625rem var(--s-3); border-bottom: 1px solid var(--line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; }
+td.num { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.reaction { overflow-wrap: anywhere; min-width: 10rem; }
 .yes { font-weight: 600; }
 </style>

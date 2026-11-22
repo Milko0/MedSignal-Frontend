@@ -96,18 +96,20 @@ async function remove() {
 
 <style scoped>
 h2, h3, .row p { margin: 0; }
-h3 { font-size: 1rem; }
-.row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: .9rem 0; border-top: 1px solid var(--line); }
-.row:first-of-type { margin-top: .6rem; }
-.row p { font-size: .88rem; max-width: 34rem; }
-.danger-btn { background: var(--coral); }
-.btn:disabled { opacity: .6; cursor: not-allowed; }
-.backdrop { position: fixed; inset: 0; background: rgb(23 50 59 / .45); display: grid; place-items: center; padding: 1rem; z-index: 50; }
-.dialog { background: var(--card); border-radius: var(--radius); padding: 1.25rem; width: min(30rem, 100%); display: flex; flex-direction: column; gap: .5rem; }
+h3 { font-size: var(--fs-base); font-weight: 600; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); flex-wrap: wrap; padding: var(--s-4) 0; border-top: 1px solid var(--line); }
+.row:first-of-type { margin-top: var(--s-3); }
+.row p { font-size: var(--fs-md); color: var(--ink-2); max-width: 34rem; }
+.danger-btn { background: var(--coral); border-color: var(--coral); }
+.danger-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--coral) 85%, var(--ink)); border-color: color-mix(in srgb, var(--coral) 85%, var(--ink)); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.backdrop { position: fixed; inset: 0; background: var(--scrim); display: grid; place-items: center; padding: var(--s-4); z-index: 50; }
+.dialog { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--s-5); width: min(30rem, 100%); display: flex; flex-direction: column; gap: var(--s-2); }
 .dialog p { margin: 0; }
-label { font-size: .85rem; font-weight: 600; margin-top: .3rem; }
-input { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
-.actions { display: flex; gap: .6rem; margin-top: .6rem; }
-.error { color: var(--coral); font-size: .9rem; }
-.banner { background: var(--coral-soft); border-radius: 8px; padding: .5rem .7rem; }
+label { font-size: var(--fs-sm); font-weight: 500; color: var(--ink-2); margin-top: var(--s-2); }
+input { padding: .5rem .75rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.actions { display: flex; gap: var(--s-3); margin-top: var(--s-3); }
+.error { color: var(--coral); font-size: var(--fs-md); }
+.banner { background: var(--coral-soft); color: var(--coral); border-radius: var(--radius-sm); padding: var(--s-2) var(--s-3); font-size: var(--fs-md); }
 </style>
