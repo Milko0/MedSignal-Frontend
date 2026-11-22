@@ -24,8 +24,8 @@ Vue views, layouts, components, router and styles for the 6 mock-up views.
 
 | Item | Role |
 |---|---|
-| `views/` | AuthView, DashboardView, DrugDetailView, SignalsView, MedicineCabinetView, ProfileView |
+| `views/` | AuthView, DashboardView, DrugDetailView, SignalsView, MedicineCabinetView, ProfileView, NotFoundView |
 | `layouts/` | AppLayout (navbar), AuthLayout |
 | `components/` | common, drug, dashboard, signals, shortages, cabinet, profile, charts |
-| `router/` | routes, guards |
+| `router/` | routes (catch-all last), guards, titles |
 | `composables/` | useDebouncedSearch (300 ms, >= 2 characters, `flush()` for Enter), useAsyncState |

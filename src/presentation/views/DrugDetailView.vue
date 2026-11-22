@@ -17,6 +17,7 @@ import ReactionBars from '@/presentation/components/charts/ReactionBars.vue'
 import TrendChart from '@/presentation/components/charts/TrendChart.vue'
 import AlternativesTable from '@/presentation/components/shortages/AlternativesTable.vue'
 import DisclaimerFooter from '@/presentation/components/common/DisclaimerFooter.vue'
+import { pageTitle } from '@/presentation/router/titles'
 
 const props = defineProps({ rxcui: String })
 const auth = useAuthStore()
@@ -26,6 +27,8 @@ const drugs = useDrugStore()
 watch(() => props.rxcui, (rxcui) => drugs.loadDrug(rxcui), { immediate: true })
 
 const drug = computed(() => drugs.current)
+// The route title says "Drug details"; once the drug is known the tab shows its name instead.
+watch(() => drug.value?.name, (name) => { if (name) document.title = pageTitle(name) }, { immediate: true })
 const inShortage = computed(() => !!drug.value && isInShortage(drug.value.shortage.status))
 const coverage = computed(() => (drug.value?.matchCoverage > 0 ? formatPercent(drug.value.matchCoverage) : ''))
 const setForm = (dosageForm) => drugs.setSelection({ ...drugs.selection, dosageForm })

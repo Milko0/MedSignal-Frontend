@@ -1,5 +1,6 @@
 <script setup>
 import AppNavbar from '@/presentation/components/common/AppNavbar.vue'
+import AppToast from '@/presentation/components/common/AppToast.vue'
 </script>
 
 <template>
@@ -9,4 +10,5 @@ import AppNavbar from '@/presentation/components/common/AppNavbar.vue'
          meta.disclaimer of its response when it has one. -->
     <RouterView />
   </main>
+  <AppToast />
 </template>

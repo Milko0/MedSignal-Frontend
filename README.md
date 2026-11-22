@@ -15,7 +15,7 @@ The frontend mirrors the backend's clean architecture. Dependencies point inward
 | Application | `src/application` | Services (use-case logic) and Pinia stores (UI state) | domain, core | Axios, components |
 | Infrastructure | `src/infrastructure` | Axios client (token getter, `ApiError`, 401 hook), API adapters that return models, mappers, token storage | core, domain | presentation |
 | Presentation | `src/presentation` | Views, layouts, components, charts, router with guards, styles, composables | application, core | infrastructure |
-| Core | `src/core` | API base URL, constants (disclaimer, status palette) | - | - |
+| Core | `src/core` | API base URL, constants (disclaimer, status tones) | - | - |
 
 `src/composition/container.js` is the **composition root**: the only file that wires the concrete API adapters into the services.
 Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters call the mappers, which convert the API's snake_case JSON into camelCase domain models, so everything above infrastructure sees only models. Failed requests reject with one `ApiError { status, message, fieldErrors, url }`.
@@ -25,6 +25,7 @@ Data flow: view -> store -> service -> API adapter -> backend `/api`. Adapters c
 ```
 MedSignal-Frontend/
 ├── index.html  vite.config.js  jsconfig.json  package.json  .env.example
+├── public/favicon.svg
 ├── Dockerfile  nginx.conf
 ├── src/
 │   ├── main.js                      # Creates the app and Pinia, plugs in the 401 handler, restores the session, then installs the router
@@ -45,12 +46,12 @@ MedSignal-Frontend/
 │   │   ├── mappers/                 # one per backend DTO: common, user, drug, trend, labelGap, alternative, signal, report, statistics, cabinet, alert, profile
 │   │   └── storage/tokenStorage.js
 │   └── presentation/
-│       ├── router/                  # index.js, routes.js, guards.js (guest vs authenticated)
+│       ├── router/                  # index.js, routes.js (catch-all last), guards.js (guest vs authenticated), titles.js (tab title per page)
 │       ├── layouts/                 # AppLayout (navbar), AuthLayout
 │       ├── views/                   # AuthView, DashboardView, DrugDetailView,
-│       │                            # SignalsView, MedicineCabinetView, ProfileView
+│       │                            # SignalsView, MedicineCabinetView, ProfileView, NotFoundView
 │       ├── components/
-│       │   ├── common/              # AppNavbar, AlertBell, StatusChip, DisclaimerFooter, ToggleSwitch
+│       │   ├── common/              # AppNavbar, AlertBell, AppToast, StatusChip, DisclaimerFooter, ToggleSwitch
 │       │   ├── drug/                # DrugSearchBox, DrugHeader, ShortageStatusCard, RecallsCard, LabelCard, DosageFormSelect
 │       │   ├── dashboard/           # StatTile, EmergingSignalsCard, LatestAlertsCard
 │       │   ├── signals/             # SignalTabs, FilterBar, SignalTable, PRRBadge, LabelGapChip, LabelGapsTable, ReportsDrawer, StatCard
@@ -59,7 +60,7 @@ MedSignal-Frontend/
 │       │   ├── profile/             # ProfileForm, PasswordForm, AlertSettingsCard, AccountCard
 │       │   └── charts/              # PlotlyChart, plotlyTheme, ReactionBars, TrendChart, DonutChart, AgeBarChart, Sparkline
 │       ├── composables/             # useDebouncedSearch.js, useAsyncState.js
-│       └── styles/                  # tokens.css (palette), base.css
+│       └── styles/                  # tokens.css (colour, type, spacing, motion tokens), base.css
 └── tests/ {unit, components, helpers}   # Vitest + Vue Test Utils; helpers = fixtures, mock services, Pinia setup
 ```
 
@@ -76,13 +77,18 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList`, filter chips; `AlertBell` and the count in the navbar | `useCabinetStore`, `useUiStore` | `GET /cabinet`, `DELETE /cabinet/follows/{rxcui}`, `GET /cabinet/alerts`, `DELETE /cabinet/alerts[/{id}]` |
 | Profile and settings | `/profile` | User | FR-13, FR-14 | `ProfileForm`, `PasswordForm`, `AlertSettingsCard` (`ToggleSwitch`), `AccountCard` (log out, delete account) | `useProfileStore`, `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
 
-Routing: `meta.requiresAuth` sends guests to `/auth?redirect=<page>`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). After logging in, `AuthView` returns to the `redirect` page when it is an internal path (`safeRedirect`). Views are lazy-loaded.
+Routing: `meta.requiresAuth` sends guests to `/auth?redirect=<page>`; `meta.guestOnly` sends logged-in users to the dashboard (`router/guards.js`). After logging in, `AuthView` returns to the `redirect` page when it is an internal path (`safeRedirect`). Views are lazy-loaded. Any other path shows `NotFoundView` (catch-all route, kept last). Each route has a `meta.title`; `router/titles.js` sets the browser tab to "<title> · MedSignal" after every navigation, and the drug page switches it to the drug name once loaded.
 
 Session: the JWT is kept in `localStorage` (`medsignal.token`). Login returns only a token, so the user comes from `GET /profile`; register logs in right after creating the account. On page load `main.js` calls `useAuthStore().restore()` before installing the router: a stored token that the server rejects is dropped and the page opens as a guest (an invalid token would otherwise make even guest pages answer 401). Any later 401 goes through `handleUnauthorized`, which clears the session and the user-scoped stores and, on a protected page, redirects to `/auth?redirect=<page>`; a 401 from `/auth/login`, `/auth/logout` or `/profile/password` is ignored (wrong password, not an expired session; the list is `FORM_401_PATHS` in `core/constants/auth.js`). Deleting the account ends the session locally (`endSession`, no `/auth/logout`: the server revoked the token) and opens `/auth?deleted=1`. There is no refresh token, so the user logs in again after `JWT_EXPIRE_MINUTES`.
 
 ## 4. Look and charts
 
-- Palette from the mock-ups (`styles/tokens.css`): teal for actions, amber for shortage, coral for safety signals, green for available or unchanged.
+- **Direction:** a calm analytical instrument, not a dashboard. Warm paper background (`--bg`), one dominant ink (`--ink`, `--ink-2` for secondary text), and a single cobalt accent (`--accent`) that only ever means "you can act on this" (links, primary buttons, active tab and nav, focus ring).
+- **Semantic tones are separate from the accent:** coral = safety signal, amber = shortage, green = available, teal = label / information, slate = recall or below threshold. Each text colour passes WCAG AA (5.4:1 or more) on its `-soft` background, and every status also has a text label, so nothing relies on colour alone. The tone names are part of the JS (`core/constants/status.js`, `domain/rules`), so change their values in `tokens.css`, never the names.
+- **Weight follows statistical strength:** `PRRBadge` shows a PRR below 2 as a plain figure, 2-3 outlined in amber, 3 or more with a pale coral fill. Nothing is solid red; a signal is not proof. Sparklines are neutral ink.
+- **Type:** Source Serif 4 for page and section headings, IBM Plex Sans for the interface, IBM Plex Mono for statistics (PRR, CI, chi-square, counts, RxCUI, quarters). Fonts are self-hosted with `@fontsource` (imported in `main.js`), so the app works offline on the Virtual Lab. Use the `--fs-*`, `--s-*`, `--radius*` and `--t-*` tokens instead of raw values.
+- **Disclaimer (NFR-11):** `DisclaimerFooter` is body-sized in `--ink-2` with a rule above it. Never make it smaller or fainter.
+- **Feedback:** `useUiStore.notify(message, tone)` shows a short message through `AppToast` (rendered once in `AppLayout`; coral messages are announced as alerts). Motion is limited to feedback (120-180 ms) and switched off under `prefers-reduced-motion`.
 - Charts use **Plotly.js** (`plotly.js-dist-min`): hover tooltips, zoom, responsive. `PlotlyChart.vue` wraps `Plotly.react`, resizes with its container and cleans up on unmount; `plotlyTheme.js` holds the shared look. Plotly is lazy-loaded as a separate chunk of about 4.6 MB, fetched only when a chart appears.
 - Charts take plain data props, never store objects, so they stay reusable.
 
@@ -117,8 +123,8 @@ Docker: `docker build -t medsignal-frontend .` or start it with the backend comp
 
 ## 8. State of the skeleton
 
-- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  Profile and settings (edit username and email, change password, alert switches with explicit save, log out, delete account with the username typed to confirm), the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components (shown with sample data in `SignalsView`), theme tokens, Dockerfile and Nginx config.
-- **Placeholders with TODOs:** none in the views; the toast from `useUiStore.notify` is stored but not rendered yet.
+- **Working:** routing and guards, stores and services wired through the container, Axios client with JWT and `ApiError`, one mapper per backend DTO, adapters returning models, login and register with validation, session restore, expired-token handling, navbar with account menu, search box with dropdown, the dashboard (tiles, emerging signals, latest alerts), My medicines (followed drugs with status, filter chips, alert list, alert bell),  Profile and settings (edit username and email, change password, alert switches with explicit save, log out, delete account with the username typed to confirm), the signal explorer (tabs, filters in the URL, paginated table, label gaps, reports drawer, statistics charts), Drug 360 (header with follow, shortage, recalls, label, reactions, trend, alternatives, dosage-form filter), status chip, disclaimer footer, the Plotly chart components, toast messages, not-found page, page titles and favicon, theme tokens, Dockerfile and Nginx config.
+- **Placeholders with TODOs:** none.
 
 ## 9. How to add a feature
 

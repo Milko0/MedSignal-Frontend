@@ -142,7 +142,7 @@ function onFocusOut(e) {
 
 <style scoped>
 .search { flex: 1; }
-.search.compact { flex: 0 1 260px; min-width: 9rem; }
+.search.compact { flex: 0 1 220px; min-width: 9rem; }
 .box { position: relative; }
 .row { display: flex; gap: var(--s-2); }
 input { width: 100%; padding: .625rem .875rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }

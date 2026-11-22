@@ -85,5 +85,6 @@ nav b { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 500
 .menu a:hover, .menu button:hover { background: var(--accent-soft); text-decoration: none; }
 .who { margin: 0; padding: var(--s-2) var(--s-3); font-size: var(--fs-sm); color: var(--ink-2); border-bottom: 1px solid var(--line); }
 .tag { background: var(--amber-soft); color: var(--amber); border-radius: var(--radius-sm); padding: 0 .375rem; margin-left: var(--s-1); font-size: var(--fs-xs); font-weight: 500; }
-@media (max-width: 640px) { .nav { padding: var(--s-2) var(--s-4); gap: var(--s-2) var(--s-4); } nav { gap: var(--s-4); } }
+@media (max-width: 960px) { .nav { gap: var(--s-2) var(--s-4); } nav { gap: var(--s-4); } }
+@media (max-width: 640px) { .nav { padding: var(--s-2) var(--s-4); } }
 </style>
