@@ -34,7 +34,7 @@ beforeEach(() => {
 })
 
 describe('LoginView and RegisterView', () => {
-  it('the login page shows only the login form, with links to sign up and to continue as guest', () => {
+  it('the login page shows only the login form, with a link to sign up and no guest shortcut (the header leads home)', () => {
     const w = showLogin()
     expect(w.findAll('form')).toHaveLength(1)
     expect(w.text()).toContain('Welcome back.')
@@ -42,10 +42,10 @@ describe('LoginView and RegisterView', () => {
     expect(w.find('#reg-email').exists()).toBe(false)
     expect(w.find('label[for="login-identifier"]').text()).toBe('Username or email')
     expect(linkTo(w, 'Create an account')).toEqual({ name: 'register', query: {} })
-    expect(w.text()).toContain('Continue as guest')
+    expect(w.text()).not.toContain('Continue as guest')
   })
 
-  it('the register page shows only the register form, with links to log in and to continue as guest', () => {
+  it('the register page shows only the register form, with a link to log in and no guest shortcut', () => {
     const w = showRegister()
     expect(w.findAll('form')).toHaveLength(1)
     expect(w.text()).toContain('Follow medicines and receive alerts.')
@@ -53,7 +53,7 @@ describe('LoginView and RegisterView', () => {
     expect(w.find('#login-identifier').exists()).toBe(false)
     expect(w.find('label[for="reg-email"]').text()).toBe('Email')
     expect(linkTo(w, 'Log in')).toEqual({ name: 'login', query: {} })
-    expect(w.text()).toContain('Continue as guest')
+    expect(w.text()).not.toContain('Continue as guest')
   })
 
   it('switching between the pages keeps the page to return to', () => {

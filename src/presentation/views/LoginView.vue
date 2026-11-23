@@ -1,5 +1,5 @@
 <script setup>
-// View 1a - Log in (FR-12). One form; links to /register and "Continue as guest".
+// View 1a - Log in (FR-12). One form and a link to /register; the header keeps the way back home.
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/application/stores/useAuthStore'
@@ -43,9 +43,6 @@ async function submit() {
 <template>
   <div class="auth">
     <p v-if="deleted" class="notice" role="status">Your account was deleted.</p>
-    <h1>Know what changes in the medicines you take</h1>
-    <p class="muted lede">Alerts when side-effect reports rise, a label changes or a drug goes into shortage.</p>
-
     <form class="card" novalidate @submit.prevent="submit">
       <h2>Log in</h2>
       <p class="muted">Welcome back.</p>
@@ -65,6 +62,5 @@ async function submit() {
       <p class="switch muted">New to MedSignal? <RouterLink :to="registerLink">Create an account</RouterLink></p>
     </form>
 
-    <p class="muted guest">Just looking? <RouterLink to="/">Continue as guest</RouterLink></p>
   </div>
 </template>

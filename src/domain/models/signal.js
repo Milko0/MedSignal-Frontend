@@ -15,7 +15,8 @@
  * @property {boolean} isSignal    Evans criteria met
  * @property {boolean} isEmerging
  * @property {'FULL'|'PARTIAL'|'NONE'} labelMatch
- * @property {boolean|null} inShortage  null until the backend sends `in_shortage` on signal rows
+ * @property {boolean|null} inShortage  null when the backend does not send `in_shortage`
+ * @property {'CURRENT'|'TO_BE_DISCONTINUED'|'RESOLVED'|null} shortageStatus  FDA shortage list status of the drug
  * @property {number[]} trend
  */
 

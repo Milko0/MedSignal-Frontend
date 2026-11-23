@@ -159,11 +159,11 @@ describe('describeEmpty', () => {
     expect(describeEmpty({ ...defaultFilters(), minReports: 1, onlySignals: false }, '2026Q3')).toBe('No signals in 2026Q3 with at least 1 report.')
   })
 
-  it('reminds that the reaction filter is an exact term', () => {
+  it('no longer says the reaction must be an exact term (it matches any part)', () => {
     const f = { ...defaultFilters(), reaction: 'infusion', minReports: 3, onlySignals: false }
 
     expect(describeEmpty(f, '2025Q4')).toBe(
-      'No signals in 2025Q4 matching your filters with at least 3 reports. Try fewer filters. The reaction must match a term exactly (e.g. "NAUSEA"), not part of one.',
+      'No signals in 2025Q4 matching your filters with at least 3 reports. Try fewer filters.',
     )
   })
 

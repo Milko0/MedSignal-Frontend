@@ -202,12 +202,13 @@ describe('SignalsView: the URL is the source of truth', () => {
 })
 
 describe('SignalsView: the table', () => {
-  it('shows a row per signal with its PRR, label state and pager', async () => {
+  it('shows a row per signal with its label state and pager, without the PRR', async () => {
     const w = await open('/signals')
 
     expect(w.findAll('tbody tr')).toHaveLength(1)
     expect(w.find('tbody tr').text()).toContain('ibuprofen')
-    expect(w.find('tbody tr').text()).toContain('4.9')
+    expect(w.find('tbody tr').text()).toContain('Listed')
+    expect(w.find('tbody tr').text()).not.toContain('4.9')
     expect(w.find('.pager').text()).toContain('Page 2 of 5')
   })
 

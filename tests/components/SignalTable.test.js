@@ -19,16 +19,15 @@ const show = (props = {}) => mount(SignalTable, { props: { signals: three(), tot
 const col = (w, i) => w.findAll('tbody tr').map((r) => r.findAll('td')[i].text())
 
 describe('SignalTable', () => {
-  it('renders one row per signal with every column (CI lower and chi-square sit in the PRR badge)', () => {
+  it('renders one row per signal in plain terms, without PRR, CI or chi-square', () => {
     const w = show({ signals: [row()] })
     const cells = w.findAll('tbody td').map((c) => c.text())
 
-    expect(w.findAll('thead th').map((h) => h.text())).toEqual(['Drug', 'Reaction', 'Reports', 'PRR', 'In label', 'Trend', 'Reports'])
+    expect(w.findAll('thead th').map((h) => h.text())).toEqual(['Drug', 'Reaction', 'Reports', 'In label', 'Trend', 'Reports'])
     expect(cells.slice(0, 3)).toEqual(['ibuprofen', 'Gastrointestinal haemorrhage', '1204'])
-    expect(w.find('tbody .badge').text()).toBe('4.9')
-    expect(w.find('tbody [role="tooltip"]').text()).toContain('4.48')
-    expect(w.find('tbody [role="tooltip"]').text()).toContain('1609.4')
-    expect(cells[4]).toBe('Listed')
+    expect(w.find('tbody .badge').exists()).toBe(false)
+    expect(w.text()).not.toContain('4.9')
+    expect(cells[3]).toBe('Listed')
     expect(w.find('td svg.sparkline').exists()).toBe(true)
     expect(w.find('tbody button.reports').text()).toBe('View reports')
   })
@@ -56,19 +55,24 @@ describe('SignalTable', () => {
   })
 
   it('shows the label state of each row: Listed / Partly listed / Not listed', () => {
-    expect(col(show(), 4)).toEqual(['Listed', 'Not listed', 'Partly listed'])
+    expect(col(show(), 3)).toEqual(['Listed', 'Not listed', 'Partly listed'])
   })
 
   it('hides the Shortage column while the backend does not send it', () => {
     expect(show().findAll('thead th').map((h) => h.text())).not.toContain('Shortage')
   })
 
-  it('shows a Shortage column once the rows carry in_shortage', () => {
-    const w = show({ signals: [row({ in_shortage: true }), row({ rxcui: '9', in_shortage: false }), row({ rxcui: '8' })] })
+  it('shows a Shortage column with the FDA list status once the rows carry it', () => {
+    const w = show({ signals: [
+      row({ in_shortage: true, shortage_status: 'CURRENT' }),
+      row({ rxcui: '9', in_shortage: false, shortage_status: 'TO_BE_DISCONTINUED' }),
+      row({ rxcui: '7', in_shortage: false, shortage_status: 'RESOLVED' }),
+      row({ rxcui: '8', in_shortage: false, shortage_status: null }),
+    ] })
 
     expect(w.findAll('thead th').map((h) => h.text())).toContain('Shortage')
-    expect(col(w, 5)).toEqual(['In shortage', 'No', '–'])
-    expect(w.find('tbody tr').findAll('td')[5].find('.chip').classes()).toContain('amber')
+    expect(col(w, 4)).toEqual(['In shortage', 'To be discontinued', 'Shortage resolved', 'No shortage'])
+    expect(w.find('tbody tr').findAll('td')[4].find('.chip').classes()).toContain('amber')
   })
 
   describe('pagination', () => {
@@ -140,11 +144,6 @@ describe('SignalTable', () => {
       expect(col(w, 0)).toEqual(['CHARLIE', 'BRAVO', 'ALPHA'])
     })
 
-    it('sorts by PRR too', async () => {
-      const w = show()
-      await w.findAll('thead .sort')[3].trigger('click')
-      expect(col(w, 0)).toEqual(['ALPHA', 'BRAVO', 'CHARLIE'])
-    })
 
     it('reports the sort state for screen readers and says in the tooltip that only this page is sorted', async () => {
       const w = show()
@@ -230,9 +229,9 @@ describe('LabelGapChip', () => {
 describe('SignalGlossary', () => {
   const terms = (props) => mount(SignalGlossary, { props }).findAll('dt').map((d) => d.text())
 
-  it('explains the columns of the signal tabs, including CI lower and chi-square', () => {
-    expect(terms({ tab: 'all' })).toEqual(['Reports', 'PRR', '95% CI lower bound', 'Chi-square', 'In label', 'Emerging', 'Trend'])
-    expect(terms({ tab: 'emerging' })).toContain('PRR')
+  it('explains only the columns the signal tabs show, in plain words (no PRR, CI or chi-square)', () => {
+    expect(terms({ tab: 'all' })).toEqual(['Reports', 'In label', 'Emerging', 'Trend'])
+    expect(terms({ tab: 'emerging' })).not.toContain('PRR')
   })
 
   it('adds Shortage only when the table shows that column', () => {

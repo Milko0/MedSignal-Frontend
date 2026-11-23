@@ -6,6 +6,8 @@ import { useCabinetStore } from '@/application/stores/useCabinetStore'
 import { isInShortage } from '@/domain/rules/shortageStatus'
 
 const EMERGING_ROWS = 5   // rows in the "Emerging signals" card
+// Pairs with very few reports reach huge ratios by chance (5 reports, PRR 8000): the dashboard shows sturdier ones.
+export const EMERGING_MIN_REPORTS = 10
 const LATEST_ALERTS = 4   // alerts in the "Latest alerts" card
 
 // Dashboard (FR-06, FR-17, FR-18). The emerging signals belong to this store; the followed drugs and the alerts stay
@@ -32,7 +34,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // No quarter: the backend uses the latest one and says which (emerging.quarter).
   const loadEmerging = () => track(emergingLoading, emergingError, async () => {
-    emerging.value = await services.signal.emerging({ pageSize: EMERGING_ROWS })
+    emerging.value = await services.signal.emerging({ pageSize: EMERGING_ROWS, minReports: EMERGING_MIN_REPORTS })
   })
   const loadFollowed = () => track(followedLoading, followedError, () => cabinet.loadFollowed())
   const loadAlerts = () => track(alertsLoading, alertsError, () => cabinet.loadAlerts())

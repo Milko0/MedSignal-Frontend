@@ -40,13 +40,13 @@ describe('useDashboardStore load', () => {
     expect(store.emerging.quarter).toBe('2026Q3')
   })
 
-  it('asks for 5 emerging rows and no quarter (the backend picks the latest)', async () => {
+  it('asks for 5 emerging rows with at least 10 reports and no quarter (the backend picks the latest)', async () => {
     respondWith({ loggedIn: false })
     const store = useDashboardStore()
 
     await store.load()
 
-    expect(services.signal.emerging).toHaveBeenCalledWith({ pageSize: 5 })
+    expect(services.signal.emerging).toHaveBeenCalledWith({ pageSize: 5, minReports: 10 })
   })
 
   it('loads the emerging signals, the followed drugs and the alerts for a user', async () => {

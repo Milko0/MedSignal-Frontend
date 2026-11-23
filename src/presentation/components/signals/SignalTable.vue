@@ -1,9 +1,8 @@
 <script setup>
-// FR-04: one page of signals: PRR (its badge shows the CI lower bound and the chi-square on hover / focus), label
-// status, shortage, trend. The backend sorts and pages; the column headers sort the rows of the CURRENT page only
-// (the tooltip says so). The shortage column appears once the backend sends `in_shortage` on the rows.
+// FR-04: one page of signals in plain terms: reports, label status, shortage status, trend. The backend ranks the
+// pairs by PRR (strongest first) and pages them; the PRR itself is not shown, guests would not read it. The column
+// headers sort the rows of the CURRENT page only (the tooltip says so).
 import { computed, ref } from 'vue'
-import PRRBadge from '@/presentation/components/signals/PRRBadge.vue'
 import LabelGapChip from '@/presentation/components/signals/LabelGapChip.vue'
 import StatusChip from '@/presentation/components/common/StatusChip.vue'
 import Sparkline from '@/presentation/components/charts/Sparkline.vue'
@@ -21,7 +20,6 @@ const COLUMNS = [
   { key: 'drug', label: 'Drug' },
   { key: 'reaction', label: 'Reaction' },
   { key: 'reports', label: 'Reports', num: true },
-  { key: 'prr', label: 'PRR', num: true },
 ]
 const SORT_TIP = 'Sorts the rows on this page only'
 
@@ -46,6 +44,10 @@ const rows = computed(() => {
 
 const rowKey = (s) => `${s.rxcui}|${s.reaction}|${s.quarter}`
 const showShortage = computed(() => props.signals.some((s) => typeof s.inShortage === 'boolean'))
+// A drug never on the FDA list: a neutral "No shortage" chip (not "available": we cannot know that).
+const SHORTAGE_CHIP = { CURRENT: { status: 'in_shortage' }, TO_BE_DISCONTINUED: { status: 'TO_BE_DISCONTINUED' },
+  RESOLVED: { status: 'RESOLVED', label: 'Shortage resolved' } }
+const shortageChip = (s) => SHORTAGE_CHIP[s.shortageStatus] ?? (s.inShortage ? SHORTAGE_CHIP.CURRENT : null)
 const hasPrev = computed(() => props.page > 1)
 const hasNext = computed(() => props.page < props.totalPages)
 </script>
@@ -70,14 +72,12 @@ const hasNext = computed(() => props.page < props.totalPages)
         <tbody>
           <tr v-for="s in rows" :key="rowKey(s)">
             <td><RouterLink :to="{ name: 'drug', params: { rxcui: s.rxcui } }">{{ s.drug }}</RouterLink></td>
-            <td class="reaction">{{ s.reaction }}<span v-if="s.isEmerging" class="emerging" title="PRR rose against earlier quarters">Emerging</span></td>
+            <td class="reaction">{{ s.reaction }}<span v-if="s.isEmerging" class="emerging" title="Reported clearly more than in earlier quarters">Emerging</span></td>
             <td class="num">{{ s.reports }}</td>
-            <td class="num"><PRRBadge :prr="s.prr" :ci-lower="s.ciLower" :chi-square="s.chiSquare" /></td>
             <td><LabelGapChip :label-match="s.labelMatch" /></td>
             <td v-if="showShortage">
-              <StatusChip v-if="s.inShortage" status="in_shortage" />
-              <span v-else-if="s.inShortage === false" class="muted">No</span>
-              <span v-else class="muted" title="Not known for this row">–</span>
+              <StatusChip v-if="shortageChip(s)" :status="shortageChip(s).status" :label="shortageChip(s).label" />
+              <StatusChip v-else status="none" label="No shortage" tone="slate" title="Not on the FDA shortage list" />
             </td>
             <td><Sparkline :values="s.trend" /></td>
             <td><button type="button" class="reports" @click="emit('view-reports', s)">View reports</button></td>

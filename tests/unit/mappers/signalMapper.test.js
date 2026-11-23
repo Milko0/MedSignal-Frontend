@@ -7,7 +7,7 @@ describe('signalMapper', () => {
     expect(toSignal(signalRow)).toEqual({
       rxcui: '5640', drug: 'ibuprofen', reaction: 'Gastrointestinal haemorrhage', quarter: '2026Q3', reports: 1204,
       a: 1204, b: 9800, c: 4100, d: 880000, prr: 4.87, ciLower: 4.48, chiSquare: 1609.4,
-      isSignal: true, isEmerging: false, labelMatch: 'FULL', inShortage: null, trend: [3.9, 4.1, 4.87],
+      isSignal: true, isEmerging: false, labelMatch: 'FULL', inShortage: null, shortageStatus: null, trend: [3.9, 4.1, 4.87],
     })
   })
 
@@ -15,6 +15,10 @@ describe('signalMapper', () => {
     expect(toSignal({ ...signalRow, in_shortage: true }).inShortage).toBe(true)
     expect(toSignal({ ...signalRow, in_shortage: false }).inShortage).toBe(false)
     expect(toSignal({ ...signalRow, in_shortage: 'yes' }).inShortage).toBeNull()
+  })
+
+  it('reads the FDA shortage status of the drug', () => {
+    expect(toSignal({ ...signalRow, shortage_status: 'TO_BE_DISCONTINUED' }).shortageStatus).toBe('TO_BE_DISCONTINUED')
   })
 
   it('does not carry the old novelty / inLabel fields', () => {

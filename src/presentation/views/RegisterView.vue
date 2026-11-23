@@ -1,5 +1,5 @@
 <script setup>
-// View 1b - Create account (FR-11). One form; links to /login and "Continue as guest".
+// View 1b - Create account (FR-11). One form and a link to /login; the header keeps the way back home.
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/application/stores/useAuthStore'
@@ -39,9 +39,6 @@ async function submit() {
 
 <template>
   <div class="auth">
-    <h1>Know what changes in the medicines you take</h1>
-    <p class="muted lede">Alerts when side-effect reports rise, a label changes or a drug goes into shortage.</p>
-
     <form class="card" novalidate @submit.prevent="submit">
       <h2>Create account</h2>
       <p class="muted">Follow medicines and receive alerts.</p>
@@ -66,6 +63,5 @@ async function submit() {
       <p class="switch muted">Already have an account? <RouterLink :to="loginLink">Log in</RouterLink></p>
     </form>
 
-    <p class="muted guest">Just looking? <RouterLink to="/">Continue as guest</RouterLink></p>
   </div>
 </template>

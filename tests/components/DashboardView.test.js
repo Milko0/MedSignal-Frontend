@@ -76,7 +76,8 @@ describe('DashboardView as a guest', () => {
 
     expect(w.find('#emerging-title').text()).toBe('Emerging signals · 2026Q3')
     const cells = w.findAll('tbody tr')[0].findAll('td').map((c) => c.text())
-    expect(cells.slice(0, 4)).toEqual(['ibuprofen', 'Gastrointestinal haemorrhage', '1204', '4.87'])
+    expect(cells.slice(0, 3)).toEqual(['ibuprofen', 'Gastrointestinal haemorrhage', '1204'])
+    expect(w.find('thead').text()).not.toContain('PRR')
     expect(w.findAll('tbody tr')[0].find('svg.sparkline').exists()).toBe(true)
   })
 
@@ -87,7 +88,7 @@ describe('DashboardView as a guest', () => {
 
     expect(push).toHaveBeenCalledWith({
       path: '/signals',
-      query: { rxcui: '5640', drug: 'ibuprofen', reaction: 'Gastrointestinal haemorrhage', min: '3', all: '1' },
+      query: { rxcui: '5640', drug: 'ibuprofen', reaction: 'Gastrointestinal haemorrhage', min: '10', all: '1' },
     })
   })
 
