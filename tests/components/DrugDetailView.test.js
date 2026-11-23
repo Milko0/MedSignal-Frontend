@@ -223,7 +223,7 @@ describe('DrugDetailView', () => {
     it('sends a guest to the login screen that returns to this drug', async () => {
       const w = await show()
 
-      expect(JSON.parse(w.find('a.login').attributes('data-to'))).toEqual({ name: 'auth', query: { redirect: '/drugs/5640' } })
+      expect(JSON.parse(w.find('a.login').attributes('data-to'))).toEqual({ name: 'login', query: { redirect: '/drugs/5640' } })
       expect(w.find('button.btn').exists()).toBe(false)
     })
 

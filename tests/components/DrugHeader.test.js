@@ -64,7 +64,7 @@ describe('DrugHeader', () => {
 
       expect(w.find('button').exists()).toBe(false)
       expect(w.find('a.login').text()).toBe('Log in to follow')
-      expect(JSON.parse(w.find('a.login').attributes('data-to'))).toEqual({ name: 'auth', query: { redirect: '/drugs/5640' } })
+      expect(JSON.parse(w.find('a.login').attributes('data-to'))).toEqual({ name: 'login', query: { redirect: '/drugs/5640' } })
     })
   })
 

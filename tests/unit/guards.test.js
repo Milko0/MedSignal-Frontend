@@ -19,10 +19,10 @@ setupPinia()
 beforeEach(() => vi.resetAllMocks())
 
 describe('router guards', () => {
-  it('sends a guest to /auth and remembers the page they wanted', () => {
+  it('sends a guest to /login and remembers the page they wanted', () => {
     services.auth.hasToken.mockReturnValue(false)
     const to = { meta: { requiresAuth: true }, fullPath: '/my-medicines' }
-    expect(guard()(to)).toEqual({ name: 'auth', query: { redirect: '/my-medicines' } })
+    expect(guard()(to)).toEqual({ name: 'login', query: { redirect: '/my-medicines' } })
   })
 
   it('keeps the query string in the remembered page', () => {
@@ -36,14 +36,14 @@ describe('router guards', () => {
     expect(guard()({ meta: { requiresAuth: true }, fullPath: '/profile' })).toBeUndefined()
   })
 
-  it('sends a logged-in user away from /auth to the dashboard', () => {
+  it('sends a logged-in user away from /login to the dashboard', () => {
     services.auth.hasToken.mockReturnValue(true)
-    expect(guard()({ meta: { guestOnly: true }, fullPath: '/auth' })).toEqual({ name: 'dashboard' })
+    expect(guard()({ meta: { guestOnly: true }, fullPath: '/login' })).toEqual({ name: 'dashboard' })
   })
 
-  it('lets a guest open /auth and public pages', () => {
+  it('lets a guest open /login and public pages', () => {
     services.auth.hasToken.mockReturnValue(false)
-    expect(guard()({ meta: { guestOnly: true }, fullPath: '/auth' })).toBeUndefined()
+    expect(guard()({ meta: { guestOnly: true }, fullPath: '/login' })).toBeUndefined()
     expect(guard()({ meta: {}, fullPath: '/signals' })).toBeUndefined()
   })
 })

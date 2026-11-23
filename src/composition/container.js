@@ -14,7 +14,7 @@ import { createSignalService } from '@/application/services/signalService'
 import { createCabinetService } from '@/application/services/cabinetService'
 import { createProfileService } from '@/application/services/profileService'
 
-// The client reads the token from storage. What a 401 means for the session (drop it, redirect to /auth) needs the
+// The client reads the token from storage. What a 401 means for the session (drop it, redirect to /login) needs the
 // auth store and the router, so main.js plugs onUnauthorized in; until then a 401 changes nothing.
 configureHttp({ getToken: tokenStorage.get })
 

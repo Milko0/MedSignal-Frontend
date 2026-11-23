@@ -17,12 +17,12 @@ async function bootstrap() {
   const app = createApp(App).use(createPinia())
   const auth = useAuthStore()
 
-  // Expired or revoked token: drop the session and, if the page needs a login, go to /auth and come back after.
+  // Expired or revoked token: drop the session and, if the page needs a login, go to /login and come back after.
   configureHttp({
     onUnauthorized: (error) => {
       if (!auth.handleUnauthorized(error)) return
       const route = router.currentRoute.value
-      if (route.meta.requiresAuth) router.push({ name: 'auth', query: { redirect: route.fullPath } })
+      if (route.meta.requiresAuth) router.push({ name: 'login', query: { redirect: route.fullPath } })
     },
   })
 

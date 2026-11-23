@@ -21,7 +21,7 @@ const brands = computed(() => props.drug.brandNames.slice(0, MAX_BRANDS))
 const moreBrands = computed(() => Math.max(0, props.drug.brandNames.length - MAX_BRANDS))
 const classes = computed(() => props.drug.atcClasses.slice(0, MAX_CLASSES))
 const moreClasses = computed(() => Math.max(0, props.drug.atcClasses.length - MAX_CLASSES))
-const loginTarget = computed(() => ({ name: 'auth', query: { redirect: `/drugs/${encodeURIComponent(props.drug.rxcui)}` } }))
+const loginTarget = computed(() => ({ name: 'login', query: { redirect: `/drugs/${encodeURIComponent(props.drug.rxcui)}` } }))
 </script>
 
 <template>

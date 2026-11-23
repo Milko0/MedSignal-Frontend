@@ -17,14 +17,22 @@ describe('routes', () => {
     expect(router.resolve('/signals').name).toBe('signals')
     expect(router.resolve('/drugs/5640').name).toBe('drug')
     expect(router.resolve('/my-medicines').name).toBe('cabinet')
-    expect(router.resolve('/auth').name).toBe('auth')
+    expect(router.resolve('/login').name).toBe('login')
+    expect(router.resolve('/register').name).toBe('register')
   })
 
   it('gives every named page a title', () => {
     const router = makeRouter()
-    for (const path of ['/', '/signals', '/drugs/1', '/my-medicines', '/profile', '/auth', '/nope']) {
+    for (const path of ['/', '/signals', '/drugs/1', '/my-medicines', '/profile', '/login', '/register', '/nope']) {
       expect(router.resolve(path).meta.title, path).toBeTruthy()
     }
+  })
+
+  it('sends the old /auth address to the login page and keeps its query', async () => {
+    const router = makeRouter()
+    await router.push('/auth?redirect=/profile')
+    expect(router.currentRoute.value.name).toBe('login')
+    expect(router.currentRoute.value.query).toEqual({ redirect: '/profile' })
   })
 })
 

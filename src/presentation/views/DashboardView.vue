@@ -34,7 +34,7 @@ onMounted(() => dash.load())
     </template>
     <StatTile label="Emerging signals this quarter" :value="dash.emergingCount" tone="coral" />
     <p v-if="!auth.loggedIn" class="cta card">
-      <RouterLink to="/auth">Create an account</RouterLink> to follow medicines and get alerts.
+      <RouterLink to="/register">Create an account</RouterLink> to follow medicines and get alerts.
     </p>
   </div>
 

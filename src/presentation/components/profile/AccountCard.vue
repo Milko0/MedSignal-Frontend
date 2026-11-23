@@ -1,6 +1,6 @@
 <script setup>
 // Account actions: log out, and delete the account (FR-14). Deleting cannot be undone, so it asks the user to type
-// their username first. After it the server has revoked the token, and the user lands on /auth with a notice.
+// their username first. After it the server has revoked the token, and the user lands on /login with a notice.
 import { computed, nextTick, ref, useId } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/application/stores/useAuthStore'
@@ -45,7 +45,7 @@ async function remove() {
   failure.value = ''
   try {
     await profile.deleteAccount()
-    await router.push({ name: 'auth', query: { deleted: '1' } })
+    await router.push({ name: 'login', query: { deleted: '1' } })
   } catch (e) {
     failure.value = e?.message || 'Could not delete the account. Please try again.'
   } finally {

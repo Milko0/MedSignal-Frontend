@@ -64,7 +64,7 @@ onBeforeUnmount(() => {
         <button type="button" role="menuitem" @click="logOut">Log out</button>
       </div>
     </div>
-    <RouterLink v-else to="/auth" class="btn outline">Log in</RouterLink>
+    <RouterLink v-else to="/login" class="btn outline">Log in</RouterLink>
   </header>
 </template>
 

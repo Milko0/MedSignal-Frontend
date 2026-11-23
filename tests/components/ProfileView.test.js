@@ -25,7 +25,7 @@ async function show({ withUser = true } = {}) {
     history: createMemoryHistory(),
     routes: [
       { path: '/profile', name: 'profile', component: ProfileView },
-      { path: '/auth', name: 'auth', component: { template: '<div />' } },
+      { path: '/login', name: 'login', component: { template: '<div />' } },
       { path: '/', name: 'dashboard', component: { template: '<div />' } },
     ],
   })
@@ -407,7 +407,7 @@ describe('account card', () => {
     expect(useAuthStore().loggedIn).toBe(true)
   })
 
-  it('deletes, leaves the session without /auth/logout and lands on /auth with the notice flag', async () => {
+  it('deletes, leaves the session without /auth/logout and lands on /login with the notice flag', async () => {
     services.profile.remove.mockResolvedValue(undefined)
     const w = await show()
     await ask(w)
@@ -420,7 +420,7 @@ describe('account card', () => {
     expect(services.auth.logout).not.toHaveBeenCalled()
     expect(useAuthStore().loggedIn).toBe(false)
     expect(useAuthStore().user).toBeNull()
-    expect(router.currentRoute.value.name).toBe('auth')
+    expect(router.currentRoute.value.name).toBe('login')
     expect(router.currentRoute.value.query).toEqual({ deleted: '1' })
   })
 
@@ -440,7 +440,7 @@ describe('account card', () => {
 
     await confirmButton(w).trigger('click')
     await flushPromises()
-    expect(router.currentRoute.value.name).toBe('auth')
+    expect(router.currentRoute.value.name).toBe('login')
   })
 
   it('does not flash an error card while the session ends', async () => {
