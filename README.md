@@ -54,7 +54,7 @@ MedSignal-Frontend/
 │       │   ├── common/              # AppNavbar, AlertBell, AppToast, StatusChip, DisclaimerFooter, ToggleSwitch
 │       │   ├── drug/                # DrugSearchBox, DrugHeader, ShortageStatusCard, RecallsCard, LabelCard, DosageFormSelect
 │       │   ├── dashboard/           # StatTile, EmergingSignalsCard, LatestAlertsCard
-│       │   ├── signals/             # SignalTabs, FilterBar, SignalTable, PRRBadge, LabelGapChip, LabelGapsTable, ReportsDrawer, StatCard
+│       │   ├── signals/             # SignalTabs, FilterBar, SignalTable, PRRBadge, LabelGapChip, LabelGapsTable, ReportsDrawer, StatCard, SignalGlossary
 │       │   ├── shortages/           # AlternativesTable
 │       │   ├── cabinet/             # FollowedDrugRow, AlertList
 │       │   ├── profile/             # ProfileForm, PasswordForm, AlertSettingsCard, AccountCard
@@ -74,7 +74,7 @@ The six views come from the mock-ups. There is no admin view: admin functions (F
 | Create account | `/register` | Guest only | FR-11 | one form, links to "Log in" and "Continue as guest" | `useAuthStore` | `POST /auth/register` |
 | Dashboard | `/` | Guest and user | FR-01, FR-06, FR-17, FR-18 | `DrugSearchBox`, `StatTile`, `LatestAlertsCard`, `EmergingSignalsCard` | `useDrugStore` (search), `useDashboardStore`, `useCabinetStore` | `GET /drugs`, `GET /signals/emerging`, `GET /cabinet`, `GET /cabinet/alerts` |
 | Drug details (Drug 360) | `/drugs/:rxcui` | Guest (follow needs login) | FR-02, FR-03, FR-10, FR-15 | `DrugHeader`, `DosageFormSelect`, `ShortageStatusCard`, `RecallsCard`, `LabelCard`, `ReactionBars`, `TrendChart`, `AlternativesTable` | `useDrugStore` | `GET /drugs/{rxcui}/overview`, `.../reaction-trend`, `GET /shortages/{rxcui}/alternatives`, `POST/DELETE /cabinet/follows` |
-| Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `SignalTabs`, `FilterBar`, `SignalTable`, `PRRBadge`, `LabelGapChip`, `LabelGapsTable`, `ReportsDrawer`, `StatCard`, `AgeBarChart`, `DonutChart`, `TrendChart` | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
+| Signals and statistics | `/signals` | Guest | FR-04 to FR-09 | `SignalTabs`, `FilterBar` (only the filters the tab uses), `SignalTable` (CI lower bound and chi-square in the `PRRBadge` popup; Shortage column once rows carry `in_shortage`), `LabelGapChip`, `LabelGapsTable`, `SignalGlossary`, `ReportsDrawer`, `StatCard`, `AgeBarChart`, `DonutChart`, `TrendChart` (age and sex charts leave Unknown out and say its share underneath) | `useSignalStore` | `GET /signals`, `GET /signals/{rxcui}/{reaction}/reports`, `GET /statistics`, `GET /drugs/{rxcui}/label-gaps` |
 | My medicines | `/my-medicines` | User | FR-15 to FR-18 | `FollowedDrugRow`, `AlertList`, filter chips; `AlertBell` and the count in the navbar | `useCabinetStore`, `useUiStore` | `GET /cabinet`, `DELETE /cabinet/follows/{rxcui}`, `GET /cabinet/alerts`, `DELETE /cabinet/alerts[/{id}]` |
 | Profile and settings | `/profile` | User | FR-13, FR-14 | `ProfileForm`, `PasswordForm`, `AlertSettingsCard` (`ToggleSwitch`), `AccountCard` (log out, delete account) | `useProfileStore`, `useAuthStore` | `GET/PATCH/DELETE /profile`, `POST /profile/password`, `GET/PUT /profile/alert-settings` |
 

@@ -43,7 +43,7 @@ Frontend tests.
 | `components/AlternativesTable.test.js`, `components/DrugDetailView.test.js` | Ranked rows and empty state; the whole Drug 360 page with its states |
 | `unit/signalFilters.test.js`, `unit/statsShaping.test.js` | Filters <-> URL round trip, per-tab minimum, empty-state text; statistics reshaping |
 | `unit/stores/useSignalStore*.test.js` | Signal store: tab -> service, stale answers, drawer incl. the `/` case, statistics scope and per-chart failures |
-| `components/FilterBar.test.js`, `components/SignalTable.test.js`, `components/LabelGapsTable.test.js`, `components/ReportsDrawer.test.js`, `components/StatCard.test.js` | Filter bar and tabs, table (sort, pager, chips), label gaps states, drawer (focus, states, pager), chart card states |
+| `components/FilterBar.test.js`, `components/SignalTable.test.js`, `components/LabelGapsTable.test.js`, `components/ReportsDrawer.test.js`, `components/StatCard.test.js` | Filter bar per tab, table (sort, pager, chips, PRR popup, shortage column), glossary, label gaps states, drawer (focus, states, pager), chart card states |
 | `unit/cabinetRules.test.js`, `unit/stores/useCabinetStore.test.js` | Row status and filters; freshness, shared requests, optimistic unfollow / dismiss with rollback, reset, rows and counts |
 | `components/FollowedDrugRow.test.js`, `components/AlertList.test.js`, `components/MedicineCabinetView.test.js`, `components/AlertBell.test.js` | Chip per status and confirm-to-unfollow; dismiss and dismiss-all confirmation; the whole My medicines page; bell count and list |
 | `components/SignalsView.test.js` | URL as source of truth with a real router, tabs, drawer, charts |

@@ -17,6 +17,7 @@ export const toSignal = (d) => ({
   isSignal: d.is_signal,
   isEmerging: d.is_emerging,
   labelMatch: d.label_match,
+  inShortage: typeof d.in_shortage === 'boolean' ? d.in_shortage : null,   // not sent yet: the column stays hidden
   trend: d.trend ?? [],
 })
 

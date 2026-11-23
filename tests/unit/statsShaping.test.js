@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ageGroups, bucketsToMap, groupLabel, lastQuarters, quartersFromBuckets, seriousSeries, sexShares,
+  ageGroups, bucketsToMap, groupLabel, lastQuarters, quartersFromBuckets, seriousSeries, sexShares, splitUnknown,
 } from '@/domain/rules/statsShaping'
 
 const b = (group, value) => ({ group, value })
@@ -146,5 +146,18 @@ describe('seriousSeries', () => {
     const [, s] = seriousSeries([b('2026Q3', 5)], { '2026Q3': 0 })
 
     expect(s.counts).toEqual([0])
+  })
+})
+
+describe('splitUnknown', () => {
+  it('takes Unknown out and gives its share of the whole', () => {
+    expect(splitUnknown({ '0-17': 1, '75+': 2, Unknown: 1 })).toEqual({ known: { '0-17': 1, '75+': 2 }, unknownShare: 0.25 })
+    expect(splitUnknown({ Female: 49.3, Male: 31.8, Unknown: 18.9 }).unknownShare).toBeCloseTo(0.189)
+  })
+
+  it('gives 0 when nothing is unknown or there is no data', () => {
+    expect(splitUnknown({ Female: 75, Male: 25 })).toEqual({ known: { Female: 75, Male: 25 }, unknownShare: 0 })
+    expect(splitUnknown({})).toEqual({ known: {}, unknownShare: 0 })
+    expect(splitUnknown(null)).toEqual({ known: {}, unknownShare: 0 })
   })
 })

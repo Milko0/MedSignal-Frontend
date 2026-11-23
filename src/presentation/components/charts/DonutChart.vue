@@ -3,11 +3,11 @@ import { computed } from 'vue'
 import PlotlyChart from './PlotlyChart.vue'
 import { COLORS } from './plotlyTheme'
 
-const props = defineProps({ values: { type: Object, default: () => ({}) } }) // percentages {Female: 49.3, Male: 31.8, Unknown: 18.9}
+const props = defineProps({ values: { type: Object, default: () => ({}) } }) // {Female: 49.3, Male: 31.8}; slices show their share of what is drawn
 const data = computed(() => [{
   type: 'pie', hole: 0.62, labels: Object.keys(props.values), values: Object.values(props.values),
   marker: { colors: [COLORS.teal, COLORS.slate, COLORS.faint] }, textinfo: 'percent', sort: false,
-  hovertemplate: '%{label}: %{value}%<extra></extra>',
+  hovertemplate: '%{label}: %{percent}<extra></extra>',
 }])
 </script>
 

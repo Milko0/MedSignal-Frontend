@@ -418,12 +418,20 @@ describe('SignalsView: statistics charts', () => {
     backend()
     const w = await open('/signals')
 
-    expect(Object.keys(data(w, '.age-chart', 'data-groups'))).toEqual(['0-17', '75+', 'Unknown'])
+    expect(Object.keys(data(w, '.age-chart', 'data-groups'))).toEqual(['0-17', '75+'])
     expect(data(w, '.sex-chart', 'data-values')).toEqual({ Female: 75, Male: 25 })
     const series = data(w, '.serious-chart', 'data-series')
     expect(series.map((x) => x.reaction)).toEqual(['All reports', 'Serious'])
     expect(series[1].counts).toEqual([12700, 10806])
     expect(w.text()).not.toContain('(sample)')
+  })
+
+  it('leaves Unknown out of the charts and says under the chart how many reports have it blank', async () => {
+    backend()
+    const w = await open('/signals')
+
+    const notes = w.findAll('.footnote').map((n) => n.text())
+    expect(notes).toEqual(['50% of reports have no age recorded; the chart shows the rest.'])   // 3 of 6; sex has no Unknown
   })
 
   it('says what the charts describe: the latest quarter of all drugs by default', async () => {

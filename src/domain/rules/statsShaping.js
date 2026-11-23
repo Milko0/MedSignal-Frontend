@@ -57,6 +57,15 @@ export function sexShares(buckets) {
   return Object.fromEntries(tenths.map((t) => [groupLabel(t.group), t.floor / 10]))
 }
 
+// The charts draw the known groups only; the share of reports with the field left blank (`Unknown`) is stated in
+// words under the chart instead, so the bars and slices stay readable without hiding how much data is missing.
+// map is { label: number } with display labels (ageGroups / sexShares); unknownShare is 0..1 of the whole.
+export function splitUnknown(map) {
+  const { Unknown: unknown = 0, ...known } = map ?? {}
+  const total = Object.values(known).reduce((sum, v) => sum + v, 0) + unknown
+  return { known, unknownShare: total > 0 ? unknown / total : 0 }
+}
+
 // The last `n` quarters of a `group_by=quarter` answer, oldest first (the order of a time axis).
 export function lastQuarters(buckets, n = 6) {
   return quartersFromBuckets(buckets).slice(0, n).reverse()

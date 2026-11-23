@@ -1,9 +1,11 @@
 <script setup>
-// FR-04: one page of signals: PRR, CI lower bound, chi-square, label status, trend. The backend sorts and pages;
-// the column headers sort the rows of the CURRENT page only (the tooltip says so).
+// FR-04: one page of signals: PRR (its badge shows the CI lower bound and the chi-square on hover / focus), label
+// status, shortage, trend. The backend sorts and pages; the column headers sort the rows of the CURRENT page only
+// (the tooltip says so). The shortage column appears once the backend sends `in_shortage` on the rows.
 import { computed, ref } from 'vue'
 import PRRBadge from '@/presentation/components/signals/PRRBadge.vue'
 import LabelGapChip from '@/presentation/components/signals/LabelGapChip.vue'
+import StatusChip from '@/presentation/components/common/StatusChip.vue'
 import Sparkline from '@/presentation/components/charts/Sparkline.vue'
 
 const props = defineProps({
@@ -20,8 +22,6 @@ const COLUMNS = [
   { key: 'reaction', label: 'Reaction' },
   { key: 'reports', label: 'Reports', num: true },
   { key: 'prr', label: 'PRR', num: true },
-  { key: 'ciLower', label: 'CI lower', num: true },
-  { key: 'chiSquare', label: 'Chi-square', num: true },
 ]
 const SORT_TIP = 'Sorts the rows on this page only'
 
@@ -45,7 +45,7 @@ const rows = computed(() => {
 })
 
 const rowKey = (s) => `${s.rxcui}|${s.reaction}|${s.quarter}`
-const fmt = (n, digits) => (Number.isFinite(n) ? n.toFixed(digits) : '–')
+const showShortage = computed(() => props.signals.some((s) => typeof s.inShortage === 'boolean'))
 const hasPrev = computed(() => props.page > 1)
 const hasNext = computed(() => props.page < props.totalPages)
 </script>
@@ -62,6 +62,7 @@ const hasNext = computed(() => props.page < props.totalPages)
               </button>
             </th>
             <th>In label</th>
+            <th v-if="showShortage">Shortage</th>
             <th>Trend</th>
             <th><span class="sr-only">Reports</span></th>
           </tr>
@@ -71,10 +72,13 @@ const hasNext = computed(() => props.page < props.totalPages)
             <td><RouterLink :to="{ name: 'drug', params: { rxcui: s.rxcui } }">{{ s.drug }}</RouterLink></td>
             <td class="reaction">{{ s.reaction }}<span v-if="s.isEmerging" class="emerging" title="PRR rose against earlier quarters">Emerging</span></td>
             <td class="num">{{ s.reports }}</td>
-            <td class="num"><PRRBadge :prr="s.prr" /></td>
-            <td class="num">{{ fmt(s.ciLower, 2) }}</td>
-            <td class="num">{{ fmt(s.chiSquare, 1) }}</td>
+            <td class="num"><PRRBadge :prr="s.prr" :ci-lower="s.ciLower" :chi-square="s.chiSquare" /></td>
             <td><LabelGapChip :label-match="s.labelMatch" /></td>
+            <td v-if="showShortage">
+              <StatusChip v-if="s.inShortage" status="in_shortage" />
+              <span v-else-if="s.inShortage === false" class="muted">No</span>
+              <span v-else class="muted" title="Not known for this row">–</span>
+            </td>
             <td><Sparkline :values="s.trend" /></td>
             <td><button type="button" class="reports" @click="emit('view-reports', s)">View reports</button></td>
           </tr>

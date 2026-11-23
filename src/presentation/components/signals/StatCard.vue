@@ -8,6 +8,7 @@ defineProps({
   error: { type: Object, default: null },
   empty: Boolean,           // loaded, but nothing to draw
   loaded: Boolean,          // data has arrived at least once
+  footnote: { type: String, default: '' },   // under the chart, e.g. how many reports have no age recorded
 })
 defineEmits(['retry'])
 </script>
@@ -23,7 +24,10 @@ defineEmits(['retry'])
     </p>
     <p v-else-if="loading && !loaded" class="state muted" role="status">Loading…</p>
     <p v-else-if="empty" class="state muted">No reports for this selection.</p>
-    <div v-else-if="loaded" class="chart" :class="{ dim: loading }"><slot /></div>
+    <template v-else-if="loaded">
+      <div class="chart" :class="{ dim: loading }"><slot /></div>
+      <p v-if="footnote" class="footnote">{{ footnote }}</p>
+    </template>
   </section>
 </template>
 
@@ -35,4 +39,5 @@ h3 { font-family: var(--font-display); font-size: var(--fs-base); font-weight: 6
 .link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .chart { transition: opacity var(--t-fast); }
 .chart.dim { opacity: .5; }
+.footnote { margin: var(--s-2) 0 0; font-size: var(--fs-sm); color: var(--ink-2); }
 </style>

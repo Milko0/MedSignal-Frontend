@@ -110,38 +110,38 @@ describe('FilterBar', () => {
   })
 
   describe('per tab', () => {
-    it('all: every filter is enabled', () => {
+    it('all: every filter is shown, with no note', () => {
       const w = show({ tab: 'all' })
 
-      expect(w.findAll('input:disabled, select:disabled')).toHaveLength(0)
+      expect(w.findAll('.field > label, .field > .label').map((l) => l.text())).toEqual(['Drug', 'Reaction', 'Quarter', 'Minimum reports', 'Show all pairs'])
+      expect(w.find('.toggle').exists()).toBe(true)
       expect(w.find('.hint').exists()).toBe(false)
     })
 
-    it('emerging: only quarter and minimum are enabled, with a note', () => {
+    it('emerging: only quarter and minimum are shown (nothing greyed out), with a note', () => {
       const w = show({ tab: 'emerging' })
 
-      expect(field(w, 'Quarter').find('select').attributes('disabled')).toBeUndefined()
-      expect(field(w, 'Minimum reports').find('select').attributes('disabled')).toBeUndefined()
-      expect(field(w, 'Reaction').find('input').attributes('disabled')).toBeDefined()
-      expect(w.find('.toggle input').attributes('disabled')).toBeDefined()
+      expect(w.findAll('.field > label, .field > .label').map((l) => l.text())).toEqual(['Quarter', 'Minimum reports'])
+      expect(w.find('.toggle').exists()).toBe(false)
       expect(w.find('.picker-stub').exists()).toBe(false)
-      expect(w.find('.hint').text()).toContain('quarter and minimum reports only')
+      expect(w.findAll('input:disabled, select:disabled')).toHaveLength(0)
+      expect(w.find('.hint').text()).toContain('quarter and minimum reports')
     })
 
-    it('gaps: drug and minimum are enabled, the rest is not, with a note', () => {
+    it('gaps: only drug and minimum are shown, with a note', () => {
       const w = show({ tab: 'gaps' })
 
+      expect(w.findAll('.field > label, .field > .label').map((l) => l.text())).toEqual(['Drug', 'Minimum reports'])
       expect(w.find('.picker-stub').exists()).toBe(true)
-      expect(field(w, 'Minimum reports').find('select').attributes('disabled')).toBeUndefined()
-      expect(field(w, 'Quarter').find('select').attributes('disabled')).toBeDefined()
-      expect(field(w, 'Reaction').find('input').attributes('disabled')).toBeDefined()
+      expect(w.find('.toggle').exists()).toBe(false)
       expect(w.find('.hint').text()).toContain('per drug')
     })
 
-    it('does not offer to clear a drug on a tab that ignores it', () => {
+    it('does not show a chosen drug on a tab that ignores it', () => {
       const w = show({ tab: 'emerging', rxcui: '5640', drugName: 'IBUPROFEN' })
 
-      expect(w.find('.clear').attributes('disabled')).toBeDefined()
+      expect(w.find('.pill').exists()).toBe(false)
+      expect(w.find('.clear').exists()).toBe(false)
     })
   })
 })

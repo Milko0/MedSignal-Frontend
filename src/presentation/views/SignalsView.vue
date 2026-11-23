@@ -9,12 +9,14 @@ import { useProfileStore } from '@/application/stores/useProfileStore'
 import { useSignalStore } from '@/application/stores/useSignalStore'
 import { defaultFilters, describeEmpty, effectiveMinReports, filtersFromQuery, queryFromFilters } from '@/domain/rules/signalFilters'
 import { formatPercent } from '@/domain/rules/percent'
+import { splitUnknown } from '@/domain/rules/statsShaping'
 import FilterBar from '@/presentation/components/signals/FilterBar.vue'
 import SignalTabs from '@/presentation/components/signals/SignalTabs.vue'
 import SignalTable from '@/presentation/components/signals/SignalTable.vue'
 import ReportsDrawer from '@/presentation/components/signals/ReportsDrawer.vue'
 import LabelGapsTable from '@/presentation/components/signals/LabelGapsTable.vue'
 import StatCard from '@/presentation/components/signals/StatCard.vue'
+import SignalGlossary from '@/presentation/components/signals/SignalGlossary.vue'
 import AgeBarChart from '@/presentation/components/charts/AgeBarChart.vue'
 import DonutChart from '@/presentation/components/charts/DonutChart.vue'
 import TrendChart from '@/presentation/components/charts/TrendChart.vue'
@@ -61,6 +63,7 @@ const goToPage = (page) => go({ ...signals.filters, page })
 const emptyMessage = computed(() => describeEmpty(signals.filters, signals.usedQuarter))
 const isList = computed(() => signals.filters.tab !== 'gaps')
 const minReports = computed(() => effectiveMinReports(signals.filters))
+const hasShortage = computed(() => (signals.list?.items ?? []).some((s) => typeof s.inShortage === 'boolean'))
 
 // What the charts describe: the drug and quarter of the table (or everything when none is chosen).
 const scopeNote = computed(() => {
@@ -70,6 +73,11 @@ const scopeNote = computed(() => {
 })
 const isEmpty = (value) => !value || (Array.isArray(value) ? value.length === 0 : Object.keys(value).length === 0)
 const loaded = (name) => signals.stats[name] !== null
+
+// Age and sex charts draw the known groups; how many reports leave the field blank is said under the chart.
+const age = computed(() => splitUnknown(signals.stats.age))
+const sex = computed(() => splitUnknown(signals.stats.sex))
+const missingNote = (share, field) => (share > 0 ? `${formatPercent(share) === '0%' ? 'Under 1%' : formatPercent(share)} of reports have no ${field} recorded; the chart shows the rest.` : '')
 </script>
 
 <template>
@@ -126,6 +134,8 @@ const loaded = (name) => signals.stats[name] !== null
     </template>
   </section>
 
+  <SignalGlossary :tab="signals.filters.tab" :shortage="hasShortage" />
+
   <div class="grid two stats">
     <StatCard
       title="Reports by age group"
@@ -133,10 +143,11 @@ const loaded = (name) => signals.stats[name] !== null
       :loading="signals.statsLoading.age"
       :error="signals.statsError.age"
       :loaded="loaded('age')"
-      :empty="loaded('age') && isEmpty(signals.stats.age)"
+      :empty="loaded('age') && isEmpty(age.known)"
+      :footnote="missingNote(age.unknownShare, 'age')"
       @retry="signals.loadStats()"
     >
-      <AgeBarChart :groups="signals.stats.age" />
+      <AgeBarChart :groups="age.known" />
     </StatCard>
     <StatCard
       title="Reports by sex (%)"
@@ -144,10 +155,11 @@ const loaded = (name) => signals.stats[name] !== null
       :loading="signals.statsLoading.sex"
       :error="signals.statsError.sex"
       :loaded="loaded('sex')"
-      :empty="loaded('sex') && isEmpty(signals.stats.sex)"
+      :empty="loaded('sex') && isEmpty(sex.known)"
+      :footnote="missingNote(sex.unknownShare, 'sex')"
       @retry="signals.loadStats()"
     >
-      <DonutChart :values="signals.stats.sex" />
+      <DonutChart :values="sex.known" />
     </StatCard>
     <StatCard
       title="Serious reports by quarter"
