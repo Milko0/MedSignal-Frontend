@@ -67,7 +67,7 @@ describe('SignalsView: the URL is the source of truth', () => {
 
     expect(lastList()).toEqual({ quarter: '2026Q2', rxcui: '5640', reaction: 'nausea', minReports: 50, onlySignals: false, page: 3, pageSize: 10 })
     expect(w.find('.pill').text()).toBe('IBUPROFEN')
-    expect(field(w, 'Reaction').find('input').element.value).toBe('nausea')
+    expect(field(w, 'Description').find('input').element.value).toBe('nausea')
     expect(field(w, 'Quarter').find('select').element.value).toBe('2026Q2')
     expect(field(w, 'Minimum reports').find('select').element.value).toBe('50')
     expect(w.find('.toggle input').element.checked).toBe(true)
@@ -96,7 +96,7 @@ describe('SignalsView: the URL is the source of truth', () => {
 
   it('Apply writes the filters to the URL, resets to page 1 and loads', async () => {
     const w = await open('/signals?page=4')
-    await field(w, 'Reaction').find('input').setValue('headache')
+    await field(w, 'Description').find('input').setValue('headache')
     await field(w, 'Minimum reports').find('select').setValue('5')
 
     await apply(w)
@@ -109,7 +109,7 @@ describe('SignalsView: the URL is the source of truth', () => {
     const w = await open('/signals')
     services.signal.list.mockClear()
 
-    await field(w, 'Reaction').find('input').setValue('headache')
+    await field(w, 'Description').find('input').setValue('headache')
     await field(w, 'Quarter').find('select').setValue('2026Q2')
 
     expect(services.signal.list).not.toHaveBeenCalled()
@@ -156,15 +156,15 @@ describe('SignalsView: the URL is the source of truth', () => {
 
   it('browser back restores the previous filters in the bar and in the request', async () => {
     const w = await open('/signals')
-    await field(w, 'Reaction').find('input').setValue('headache')
+    await field(w, 'Description').find('input').setValue('headache')
     await apply(w)
-    expect(field(w, 'Reaction').find('input').element.value).toBe('headache')
+    expect(field(w, 'Description').find('input').element.value).toBe('headache')
 
     router.back()
     await flushPromises()
 
     expect(router.currentRoute.value.query).toEqual({})
-    expect(field(w, 'Reaction').find('input').element.value).toBe('')
+    expect(field(w, 'Description').find('input').element.value).toBe('')
     expect(lastList().reaction).toBe('')
   })
 

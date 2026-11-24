@@ -23,7 +23,7 @@ describe('SignalTable', () => {
     const w = show({ signals: [row()] })
     const cells = w.findAll('tbody td').map((c) => c.text())
 
-    expect(w.findAll('thead th').map((h) => h.text())).toEqual(['Drug', 'Reaction', 'Reports', 'In label', 'Trend', 'Reports'])
+    expect(w.findAll('thead th').map((h) => h.text())).toEqual(['Drug', 'Description(reaction, symptom, technical issue)', 'Reports', 'In label', 'Trend', 'Reports'])
     expect(cells.slice(0, 3)).toEqual(['ibuprofen', 'Gastrointestinal haemorrhage', '1204'])
     expect(w.find('tbody .badge').exists()).toBe(false)
     expect(w.text()).not.toContain('4.9')
@@ -230,7 +230,7 @@ describe('SignalGlossary', () => {
   const terms = (props) => mount(SignalGlossary, { props }).findAll('dt').map((d) => d.text())
 
   it('explains only the columns the signal tabs show, in plain words (no PRR, CI or chi-square)', () => {
-    expect(terms({ tab: 'all' })).toEqual(['Reports', 'In label', 'Emerging', 'Trend'])
+    expect(terms({ tab: 'all' })).toEqual(['Description', 'Reports', 'In label', 'Emerging', 'Trend'])
     expect(terms({ tab: 'emerging' })).not.toContain('PRR')
   })
 
@@ -239,6 +239,6 @@ describe('SignalGlossary', () => {
   })
 
   it('explains the label-gap columns on the Label gaps tab', () => {
-    expect(terms({ tab: 'gaps' })).toEqual(['Reports', 'In label', 'In indications'])
+    expect(terms({ tab: 'gaps' })).toEqual(['Description', 'Reports', 'In label', 'In indications'])
   })
 })

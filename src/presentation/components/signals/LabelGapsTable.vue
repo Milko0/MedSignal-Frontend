@@ -29,7 +29,7 @@ const empty = computed(() => props.data.labelAvailable && props.data.comparable 
         <table>
           <thead>
             <tr>
-              <th>Reaction</th>
+              <th>Description <span class="hint">(reaction, symptom, technical issue)</span></th>
               <th class="num">Reports</th>
               <th>In label</th>
               <th title="The reaction also appears in the label's indications, so it may describe the condition being treated rather than a side effect">In indications</th>
@@ -50,6 +50,7 @@ const empty = computed(() => props.data.labelAvailable && props.data.comparable 
 </template>
 
 <style scoped>
+.hint { display: block; font-weight: 400; font-size: .6875rem; color: var(--muted); letter-spacing: 0; white-space: nowrap; }
 .state, .note { margin: var(--s-2) 0; }
 .note { font-size: var(--fs-md); color: var(--ink-2); }
 .scroll { overflow-x: auto; }

@@ -38,7 +38,7 @@ const open = (s) => router.push(target(s))
 
     <table v-else>
       <thead>
-        <tr><th>Drug</th><th>Reaction</th><th class="num">Reports</th><th class="trend">Trend</th></tr>
+        <tr><th>Drug</th><th>Description <span class="hint">(reaction, symptom, technical issue)</span></th><th class="num">Reports</th><th class="trend">Trend</th></tr>
       </thead>
       <tbody>
         <tr v-for="s in rows" :key="`${s.rxcui}-${s.reaction}`" class="row" @click="open(s)">
@@ -56,6 +56,7 @@ const open = (s) => router.push(target(s))
 </template>
 
 <style scoped>
+.hint { display: block; font-weight: 400; font-size: .6875rem; color: var(--muted); letter-spacing: 0; white-space: nowrap; }
 .head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-4); margin-bottom: var(--s-2); }
 h2 { margin: 0; }
 .head a { font-size: var(--fs-md); font-weight: 500; }

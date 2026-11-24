@@ -18,7 +18,7 @@ const emit = defineEmits(['view-reports', 'page'])
 
 const COLUMNS = [
   { key: 'drug', label: 'Drug' },
-  { key: 'reaction', label: 'Reaction' },
+  { key: 'reaction', label: 'Description', hint: '(reaction, symptom, technical issue)' },
   { key: 'reports', label: 'Reports', num: true },
 ]
 const SORT_TIP = 'Sorts the rows on this page only'
@@ -60,7 +60,7 @@ const hasNext = computed(() => props.page < props.totalPages)
           <tr>
             <th v-for="c in COLUMNS" :key="c.key" :class="{ num: c.num }" :aria-sort="ariaSort(c.key)">
               <button type="button" class="sort" :title="SORT_TIP" @click="toggleSort(c.key)">
-                {{ c.label }}<span class="arrow" aria-hidden="true">{{ sort.key === c.key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '' }}</span>
+                {{ c.label }}<span class="arrow" aria-hidden="true">{{ sort.key === c.key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '' }}</span><span v-if="c.hint" class="hint">{{ c.hint }}</span>
               </button>
             </th>
             <th>In label</th>
@@ -95,6 +95,7 @@ const hasNext = computed(() => props.page < props.totalPages)
 </template>
 
 <style scoped>
+.hint { display: block; font-weight: 400; font-size: .6875rem; color: var(--muted); letter-spacing: 0; white-space: nowrap; }
 .scroll { overflow-x: auto; transition: opacity var(--t-fast); }
 .scroll.dim { opacity: .55; }
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }

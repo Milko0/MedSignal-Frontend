@@ -44,7 +44,7 @@ const hint = computed(() => HINTS[props.modelValue.tab] ?? '')
     </div>
 
     <div v-if="applies('reaction')" class="field">
-      <label :for="`${uid}-reaction`">Reaction</label>
+      <label :for="`${uid}-reaction`">Description</label>
       <input
         :id="`${uid}-reaction`"
         :value="modelValue.reaction"

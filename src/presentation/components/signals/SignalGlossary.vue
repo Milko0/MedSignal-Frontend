@@ -9,6 +9,7 @@ const props = defineProps({
 })
 
 const TERMS = {
+  description: { term: 'Description', text: 'What was reported, as a standard MedDRA term: a reaction or symptom (e.g. nausea), or a technical issue with the product or how it was used (e.g. device malfunction).' },
   reports: { term: 'Reports', text: 'FDA reports in the quarter that name this drug as a suspect and list this reaction. Rows are ranked by how much more often the reaction appears with this drug than with others.' },
   label: { term: 'In label', text: 'Whether the official label already lists the reaction: Listed, Partly listed (a related term), or Not listed (a label gap).' },
   indications: { term: 'In indications', text: 'The reaction also appears among the uses of the drug, so it may describe the condition being treated rather than a side effect.' },
@@ -17,9 +18,9 @@ const TERMS = {
   trend: { term: 'Trend', text: 'How the strength of the pair moved over the last quarters (up = growing).' },
 }
 const BY_TAB = {
-  all: ['reports', 'label', 'shortage', 'emerging', 'trend'],
-  emerging: ['reports', 'label', 'shortage', 'emerging', 'trend'],
-  gaps: ['reports', 'label', 'indications'],
+  all: ['description', 'reports', 'label', 'shortage', 'emerging', 'trend'],
+  emerging: ['description', 'reports', 'label', 'shortage', 'emerging', 'trend'],
+  gaps: ['description', 'reports', 'label', 'indications'],
 }
 const terms = computed(() => (BY_TAB[props.tab] ?? BY_TAB.all).filter((k) => k !== 'shortage' || props.shortage).map((k) => TERMS[k]))
 </script>

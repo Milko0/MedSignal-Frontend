@@ -26,7 +26,7 @@ describe('FilterBar', () => {
     const w = show({ rxcui: '5640', drugName: 'IBUPROFEN', reaction: 'nausea', quarter: '2026Q2', minReports: 50, onlySignals: false })
 
     expect(w.find('.pill').text()).toBe('IBUPROFEN')
-    expect(field(w, 'Reaction').find('input').element.value).toBe('nausea')
+    expect(field(w, 'Description').find('input').element.value).toBe('nausea')
     expect(field(w, 'Quarter').find('select').element.value).toBe('2026Q2')
     expect(field(w, 'Minimum reports').find('select').element.value).toBe('50')
     expect(w.find('.toggle input').element.checked).toBe(true)
@@ -64,7 +64,7 @@ describe('FilterBar', () => {
   it('edits the draft: reaction, quarter, minimum and "show all pairs"', async () => {
     const w = show()
 
-    await field(w, 'Reaction').find('input').setValue('  headache')
+    await field(w, 'Description').find('input').setValue('  headache')
     expect(lastModel(w).reaction).toBe('  headache')
     await field(w, 'Quarter').find('select').setValue('2026Q2')
     expect(lastModel(w).quarter).toBe('2026Q2')
@@ -113,7 +113,7 @@ describe('FilterBar', () => {
     it('all: every filter is shown, with no note', () => {
       const w = show({ tab: 'all' })
 
-      expect(w.findAll('.field > label, .field > .label').map((l) => l.text())).toEqual(['Drug', 'Reaction', 'Quarter', 'Minimum reports', 'Show all pairs'])
+      expect(w.findAll('.field > label, .field > .label').map((l) => l.text())).toEqual(['Drug', 'Description', 'Quarter', 'Minimum reports', 'Show all pairs'])
       expect(w.find('.toggle').exists()).toBe(true)
       expect(w.find('.hint').exists()).toBe(false)
     })
