@@ -75,7 +75,7 @@ describe('AdminUsersView', () => {
     it('validates before sending, then creates and toasts', async () => {
       services.admin.users.create.mockResolvedValue({ id: 'u-3' })
       const w = await show()
-      await w.find('.bar .btn').trigger('click')
+      await w.find('.admin-bar .btn').trigger('click')
       await flushPromises()
       expect(dialog().textContent).toContain('New user')
 
@@ -101,7 +101,7 @@ describe('AdminUsersView', () => {
     it('shows a taken email under the email field and keeps the dialog open', async () => {
       services.admin.users.create.mockRejectedValue(apiError(409, 'luca@example.com is already in use'))
       const w = await show()
-      await w.find('.bar .btn').trigger('click')
+      await w.find('.admin-bar .btn').trigger('click')
       await flushPromises()
       const [username, email, password] = dialog().querySelectorAll('input')
       await setValue(username, 'marta')

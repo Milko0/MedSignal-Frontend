@@ -145,3 +145,98 @@ export function mapAdminUserError(error, form = {}) {
 
 // The signed-in admin's own row: its role and deletion are locked in this screen (Profile has its own delete).
 export const isSelf = (user, selfId) => !!selfId && user?.id === selfId
+
+// ---- Shortages (FR-24) --------------------------------------------------------------------------------------------
+export const SHORTAGE_STATUSES = ['CURRENT', 'TO_BE_DISCONTINUED', 'RESOLVED']
+export const AVAILABILITIES = ['AVAILABLE', 'LIMITED', 'UNAVAILABLE', 'UNKNOWN']
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+// "a, b ,, c" -> ['a','b','c'] ; the list fields of the form are one text box each
+export const splitList = (text) => (typeof text === 'string' ? text.split(/[,\n]/).map((x) => x.trim()).filter(Boolean) : [])
+export const joinList = (list) => (Array.isArray(list) ? list.join(', ') : '')
+
+// A shortage document -> the strings the form edits. null = a new, empty form.
+export function shortageToForm(doc) {
+  const d = doc ?? {}
+  return {
+    package_ndc: d.package_ndc ?? '',
+    generic_name: d.generic_name ?? '',
+    dosage_form: d.dosage_form ?? '',
+    status: d.status ?? 'CURRENT',
+    availability: d.availability ?? 'UNKNOWN',
+    shortage_reason: d.shortage_reason ?? '',
+    company: d.company ?? '',
+    presentation: d.presentation ?? '',
+    ingredient_rxcuis: joinList(d.ingredient_rxcuis),
+    routes: joinList(d.routes),
+    therapeutic_categories: joinList(d.therapeutic_categories),
+    initial_posting_date: d.initial_posting_date ?? '',
+    update_date: d.update_date ?? '',
+    discontinued_date: d.discontinued_date ?? '',
+  }
+}
+
+const orNull = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+
+// The form -> the whole document PUT/POST expects. `base` is the saved document: fields the form does not edit
+// (ndc11, first_seen, availability_raw, ...) are kept as they were instead of being wiped by the full replace.
+export function formToShortage(form, base = {}) {
+  return {
+    ...base,
+    package_ndc: form.package_ndc.trim(),
+    generic_name: orNull(form.generic_name),
+    dosage_form: orNull(form.dosage_form),
+    status: form.status,
+    availability: form.availability,
+    shortage_reason: orNull(form.shortage_reason),
+    company: orNull(form.company),
+    presentation: orNull(form.presentation),
+    ingredient_rxcuis: splitList(form.ingredient_rxcuis),
+    routes: splitList(form.routes),
+    therapeutic_categories: splitList(form.therapeutic_categories),
+    initial_posting_date: orNull(form.initial_posting_date),
+    update_date: orNull(form.update_date),
+    discontinued_date: orNull(form.discontinued_date),
+  }
+}
+
+export function validateShortage(form, { creating }) {
+  const errors = {}
+  if (creating && !form.package_ndc.trim()) errors.package_ndc = 'Enter the package NDC'
+  if (!SHORTAGE_STATUSES.includes(form.status)) errors.status = 'Choose a status'
+  if (!AVAILABILITIES.includes(form.availability)) errors.availability = 'Choose an availability'
+  if (splitList(form.ingredient_rxcuis).some((x) => !/^\d+$/.test(x))) errors.ingredient_rxcuis = 'RxCUIs are numbers, separated by commas'
+  for (const field of ['initial_posting_date', 'update_date', 'discontinued_date']) {
+    if (form[field] && !ISO_DATE.test(form[field])) errors[field] = 'Use the format YYYY-MM-DD'
+  }
+  return errors
+}
+
+// Has the form changed anything compared with the saved document? (Both sides go through the same builder, so
+// formatting differences such as null vs "" or list spacing do not count.)
+export const shortageChanged = (form, doc) =>
+  JSON.stringify(formToShortage(form, doc)) !== JSON.stringify(formToShortage(shortageToForm(doc), doc))
+
+// 409 on create ("already exists") sits under the NDC field; 422 names fields; anything else is the banner.
+export function mapShortageError(error) {
+  const message = error?.message || 'Something went wrong. Please try again.'
+  if (error?.status === 409) return { fields: { package_ndc: message }, banner: '' }
+  if (error?.status === 422) {
+    const fields = {}
+    for (const [name, text] of Object.entries(error.fieldErrors ?? {})) {
+      if (name in shortageToForm(null)) fields[name] = text
+    }
+    if (hasErrors(fields)) return { fields, banner: '' }
+  }
+  return { fields: {}, banner: message }
+}
+
+// One line of the shortages table.
+export const shortageRow = (d) => ({
+  id: d.package_ndc,
+  name: d.generic_name || '—',
+  form: d.dosage_form || '—',
+  status: d.status,
+  availability: d.availability,
+  updated: d.update_date || d.initial_posting_date || null,
+})

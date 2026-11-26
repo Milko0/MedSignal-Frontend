@@ -61,7 +61,7 @@ async function remove() {
 
 <template>
   <section aria-labelledby="users-title">
-    <div class="bar">
+    <div class="admin-bar">
       <div>
         <h2 id="users-title">Users</h2>
         <p class="muted">Create accounts, change roles, reset passwords. Deleting a user also removes their followed medicines and alerts.</p>
@@ -70,25 +70,25 @@ async function remove() {
     </div>
 
     <div class="card">
-      <p v-if="store.error" class="state error" role="alert">
-        {{ store.error }} <button type="button" class="link" @click="store.load()">Retry</button>
+      <p v-if="store.error" class="admin-state error" role="alert">
+        {{ store.error }} <button type="button" class="link-btn" @click="store.load()">Retry</button>
       </p>
-      <p v-else-if="!store.loaded && store.loading" class="state muted" role="status">Loading users…</p>
-      <p v-else-if="store.loaded && !store.items.length" class="state muted">No users on this page.</p>
+      <p v-else-if="!store.loaded && store.loading" class="admin-state muted" role="status">Loading users…</p>
+      <p v-else-if="store.loaded && !store.items.length" class="admin-state muted">No users on this page.</p>
 
-      <div v-if="store.items.length" class="scroll">
-        <table :class="{ dim: store.loading }" :aria-busy="store.loading">
+      <div v-if="store.items.length" class="data-scroll">
+        <table class="data-table" :class="{ dim: store.loading }" :aria-busy="store.loading">
           <thead>
-            <tr><th scope="col">Username</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col"><span class="sr">Actions</span></th></tr>
+            <tr><th scope="col">Username</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
           </thead>
           <tbody>
             <tr v-for="u in store.items" :key="u.id">
               <td>{{ u.username }} <span v-if="isSelf(u, selfId)" class="you">you</span></td>
               <td>{{ u.email }}</td>
               <td><StatusChip :status="u.role" :label="u.role" :tone="u.role === 'admin' ? 'teal' : 'slate'" /></td>
-              <td class="actions">
-                <button type="button" class="link" :aria-label="`Edit ${u.username}`" @click="openEdit(u)">Edit</button>
-                <button type="button" class="link danger" :disabled="isSelf(u, selfId)" :aria-label="`Delete ${u.username}`"
+              <td class="row-actions">
+                <button type="button" class="link-btn" :aria-label="`Edit ${u.username}`" @click="openEdit(u)">Edit</button>
+                <button type="button" class="link-btn danger" :disabled="isSelf(u, selfId)" :aria-label="`Delete ${u.username}`"
                         :title="isSelf(u, selfId) ? 'Delete your own account from Profile' : undefined" @click="askRemove(u)">Delete</button>
               </td>
             </tr>
@@ -109,22 +109,5 @@ async function remove() {
 </template>
 
 <style scoped>
-.bar { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-4); margin-bottom: var(--s-4); }
-.bar h2, .bar p { margin: 0; }
-.bar p { margin-top: var(--s-1); font-size: var(--fs-md); }
-.state { margin: var(--s-2) 0; }
-.error { color: var(--coral); }
-.scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; transition: opacity var(--t-fast); }
-table.dim { opacity: .55; }
-th { text-align: left; font-size: var(--fs-xs); font-weight: 600; color: var(--ink-2); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
-td { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--line); font-size: var(--fs-md); overflow-wrap: anywhere; }
-.actions { white-space: nowrap; text-align: right; }
-.actions .link + .link { margin-left: var(--s-3); }
-.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.link.danger { color: var(--coral); }
-.link:disabled { opacity: .4; cursor: not-allowed; text-decoration: none; }
 .you { background: var(--slate-soft); color: var(--ink-2); border-radius: var(--radius-sm); padding: 0 .375rem; margin-left: var(--s-1); font-size: var(--fs-xs); }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-@media (max-width: 640px) { .bar { flex-direction: column; } }
 </style>
