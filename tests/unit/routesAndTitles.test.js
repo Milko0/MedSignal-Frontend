@@ -28,6 +28,11 @@ describe('routes', () => {
     }
   })
 
+  it('protects the admin area for logged-in admins only, on a wide page, and every child inherits it', () => {
+    const match = makeRouter().resolve('/admin')
+    expect(match.meta).toMatchObject({ requiresAuth: true, requiresAdmin: true, wide: true })
+  })
+
   it('sends the old /auth address to the login page and keeps its query', async () => {
     const router = makeRouter()
     await router.push('/auth?redirect=/profile')

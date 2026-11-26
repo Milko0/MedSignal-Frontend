@@ -47,6 +47,7 @@ onBeforeUnmount(() => {
       <RouterLink to="/">Dashboard</RouterLink>
       <RouterLink to="/signals">Signals &amp; statistics</RouterLink>
       <RouterLink v-if="auth.loggedIn" to="/my-medicines">My medicines <b>{{ cabinet.followedCount }}</b></RouterLink>
+      <RouterLink v-if="auth.isAdmin" to="/admin">Admin</RouterLink>
     </nav>
     <DrugSearchBox compact />
     <AlertBell v-if="auth.loggedIn" />

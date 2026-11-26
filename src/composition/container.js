@@ -8,11 +8,13 @@ import { signalsApi } from '@/infrastructure/api/signalsApi'
 import { statisticsApi } from '@/infrastructure/api/statisticsApi'
 import { cabinetApi } from '@/infrastructure/api/cabinetApi'
 import { profileApi } from '@/infrastructure/api/profileApi'
+import { adminApi } from '@/infrastructure/api/adminApi'
 import { createAuthService } from '@/application/services/authService'
 import { createDrugService } from '@/application/services/drugService'
 import { createSignalService } from '@/application/services/signalService'
 import { createCabinetService } from '@/application/services/cabinetService'
 import { createProfileService } from '@/application/services/profileService'
+import { createAdminService } from '@/application/services/adminService'
 
 // The client reads the token from storage. What a 401 means for the session (drop it, redirect to /login) needs the
 // auth store and the router, so main.js plugs onUnauthorized in; until then a 401 changes nothing.
@@ -24,4 +26,5 @@ export const services = {
   signal: createSignalService(signalsApi, statisticsApi),
   cabinet: createCabinetService(cabinetApi),
   profile: createProfileService(profileApi),
+  admin: createAdminService(adminApi),
 }

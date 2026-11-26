@@ -75,6 +75,19 @@ describe('AppNavbar', () => {
     expect(w.find('[role="menu"]').exists()).toBe(false)
   })
 
+  it('shows the Admin link to an admin only', () => {
+    loggedIn({ role: 'admin' })
+    expect(show().text()).toContain('Admin')
+    document.body.innerHTML = ''
+    loggedIn({ role: 'user' })
+    expect(show().text()).not.toContain('Admin')
+  })
+
+  it('does not show the Admin link to a guest', () => {
+    services.auth.hasToken.mockReturnValue(false)
+    expect(show().text()).not.toContain('Admin')
+  })
+
   it('tags an admin in the menu', async () => {
     loggedIn({ role: 'admin' })
     const w = show()

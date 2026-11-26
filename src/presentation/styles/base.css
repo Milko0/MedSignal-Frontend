@@ -9,6 +9,7 @@ h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.0
 h1 { font-size: var(--fs-xl); margin: 0 0 var(--s-1); }
 h2 { font-size: var(--fs-lg); }
 .page { max-width: 1040px; margin: 0 auto; padding: var(--s-5) var(--s-4) var(--s-7); }
+.page.wide { max-width: 1280px; }
 .card { background: var(--card); border: 0; border-radius: var(--radius); padding: var(--s-4) var(--s-5); box-shadow: 0 1px 0 var(--line); }
 .muted { color: var(--muted); }
 .btn {

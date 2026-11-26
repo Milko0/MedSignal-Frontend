@@ -1,7 +1,9 @@
 import AppLayout from '@/presentation/layouts/AppLayout.vue'
 import AuthLayout from '@/presentation/layouts/AuthLayout.vue'
+import AdminLayout from '@/presentation/layouts/AdminLayout.vue'
 
 // meta.requiresAuth -> redirect guests to /login ; meta.guestOnly -> redirect logged-in users to /
+// meta.requiresAdmin -> logged-in users who are not admins are sent to the dashboard ; meta.wide -> wider page (admin tables)
 // meta.title -> browser tab title (router/titles.js); the drug page replaces it with the drug name once loaded.
 export const routes = [
   { path: '/login', component: AuthLayout, meta: { guestOnly: true },
@@ -16,6 +18,8 @@ export const routes = [
     { path: 'signals', name: 'signals', component: () => import('@/presentation/views/SignalsView.vue'), meta: { title: 'Signals & statistics' } },
     { path: 'my-medicines', name: 'cabinet', component: () => import('@/presentation/views/MedicineCabinetView.vue'), meta: { requiresAuth: true, title: 'My medicines' } },
     { path: 'profile', name: 'profile', component: () => import('@/presentation/views/ProfileView.vue'), meta: { requiresAuth: true, title: 'Profile and settings' } },
+    // Administration (FR-19 to FR-27). Child routes are added with their views; meta is inherited by every child.
+    { path: 'admin', component: AdminLayout, meta: { requiresAuth: true, requiresAdmin: true, wide: true }, children: [] },
     // Must stay last: any other path shows the not-found page instead of an empty screen.
     { path: ':pathMatch(.*)*', name: 'not-found', component: () => import('@/presentation/views/NotFoundView.vue'), meta: { title: 'Page not found' } },
   ] },
