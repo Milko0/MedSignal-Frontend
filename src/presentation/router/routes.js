@@ -19,7 +19,10 @@ export const routes = [
     { path: 'my-medicines', name: 'cabinet', component: () => import('@/presentation/views/MedicineCabinetView.vue'), meta: { requiresAuth: true, title: 'My medicines' } },
     { path: 'profile', name: 'profile', component: () => import('@/presentation/views/ProfileView.vue'), meta: { requiresAuth: true, title: 'Profile and settings' } },
     // Administration (FR-19 to FR-27). Child routes are added with their views; meta is inherited by every child.
-    { path: 'admin', component: AdminLayout, meta: { requiresAuth: true, requiresAdmin: true, wide: true }, children: [] },
+    { path: 'admin', component: AdminLayout, meta: { requiresAuth: true, requiresAdmin: true, wide: true }, children: [
+      { path: '', redirect: { name: 'admin-users' } },
+      { path: 'users', name: 'admin-users', component: () => import('@/presentation/views/AdminUsersView.vue'), meta: { title: 'Admin: users' } },
+    ] },
     // Must stay last: any other path shows the not-found page instead of an empty screen.
     { path: ':pathMatch(.*)*', name: 'not-found', component: () => import('@/presentation/views/NotFoundView.vue'), meta: { title: 'Page not found' } },
   ] },

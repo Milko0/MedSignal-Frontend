@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { hasNextPage, newRecordTemplate, parseRecordJson, quarterOf, stringifyRecord } from '@/domain/rules/admin'
+import {
+  adminUserChanges, hasNextPage, isSelf, mapAdminUserError, newRecordTemplate, newUserBody, parseRecordJson, quarterOf,
+  stringifyRecord, validateAdminUser,
+} from '@/domain/rules/admin'
 
 describe('hasNextPage', () => {
   it('is true when the page came back full (there may be more)', () => {
@@ -81,5 +84,91 @@ describe('record templates', () => {
     const t = newRecordTemplate('report', '2026-11-27')
     t.report_id = 'R1'
     expect(parseRecordJson(stringifyRecord(t), { idField: 'report_id' }).value).toEqual(t)
+  })
+})
+
+describe('validateAdminUser', () => {
+  const good = { username: 'luca', email: 'luca@example.com', password: 'password123', role: 'user' }
+
+  it('accepts a complete new user', () => {
+    expect(validateAdminUser(good, { creating: true })).toEqual({})
+  })
+
+  it('applies the backend limits to username, email and password', () => {
+    expect(validateAdminUser({ ...good, username: 'ab' }, { creating: true }).username).toMatch(/3-32/)
+    expect(validateAdminUser({ ...good, username: 'x'.repeat(33) }, { creating: true }).username).toMatch(/3-32/)
+    expect(validateAdminUser({ ...good, username: '  ab  ' }, { creating: true }).username).toBeTruthy()   // trimmed first
+    expect(validateAdminUser({ ...good, email: 'nope' }, { creating: true }).email).toBeTruthy()
+    expect(validateAdminUser({ ...good, password: 'short' }, { creating: true }).password).toMatch(/8/)
+  })
+
+  it('needs a password when creating, but not when editing', () => {
+    expect(validateAdminUser({ ...good, password: '' }, { creating: true }).password).toBeTruthy()
+    expect(validateAdminUser({ ...good, password: '' }, { creating: false })).toEqual({})
+  })
+
+  it('a password given when editing must still be long enough', () => {
+    expect(validateAdminUser({ ...good, password: 'short' }, { creating: false }).password).toMatch(/8/)
+  })
+
+  it('only user and admin are roles', () => {
+    expect(validateAdminUser({ ...good, role: 'root' }, { creating: true }).role).toBeTruthy()
+    expect(validateAdminUser({ ...good, role: 'admin' }, { creating: true })).toEqual({})
+  })
+})
+
+describe('user request bodies', () => {
+  it('newUserBody trims username and email', () => {
+    expect(newUserBody({ username: ' luca ', email: ' luca@example.com ', password: 'password123', role: 'admin' }))
+      .toEqual({ username: 'luca', email: 'luca@example.com', password: 'password123', role: 'admin' })
+  })
+
+  const saved = { id: 'u1', username: 'luca', email: 'luca@example.com', role: 'user' }
+
+  it('adminUserChanges is empty when nothing changed (case of the email alone is not a change)', () => {
+    expect(adminUserChanges({ username: 'luca', email: 'Luca@Example.com', role: 'user', password: '' }, saved)).toEqual({})
+  })
+
+  it('adminUserChanges lists only what differs', () => {
+    expect(adminUserChanges({ username: 'luca', email: 'luca@example.com', role: 'admin', password: '' }, saved)).toEqual({ role: 'admin' })
+    expect(adminUserChanges({ username: ' lucas ', email: 'l@example.com', role: 'user', password: 'newpassword1' }, saved))
+      .toEqual({ username: 'lucas', email: 'l@example.com', password: 'newpassword1' })
+  })
+
+  it('isSelf compares ids and never matches when nobody is signed in', () => {
+    expect(isSelf({ id: 'u1' }, 'u1')).toBe(true)
+    expect(isSelf({ id: 'u1' }, 'u2')).toBe(false)
+    expect(isSelf({ id: 'u1' }, undefined)).toBe(false)
+  })
+})
+
+describe('mapAdminUserError', () => {
+  const form = { username: 'luca', email: 'Luca@Example.com' }
+
+  it('puts a 409 under the field whose value the message names', () => {
+    expect(mapAdminUserError({ status: 409, message: 'luca@example.com is already in use' }, form).fields)
+      .toEqual({ email: 'luca@example.com is already in use' })
+    expect(mapAdminUserError({ status: 409, message: 'luca is already in use' }, { username: 'luca', email: 'x@example.com' }).fields)
+      .toEqual({ username: 'luca is already in use' })
+  })
+
+  it('a 409 that names neither goes to the banner', () => {
+    expect(mapAdminUserError({ status: 409, message: 'conflict' }, form)).toEqual({ fields: {}, banner: 'conflict' })
+  })
+
+  it('maps 422 field errors, ignoring unknown fields', () => {
+    const r = mapAdminUserError({ status: 422, message: 'invalid', fieldErrors: { password: 'too short', foo: 'x' } }, form)
+    expect(r).toEqual({ fields: { password: 'too short' }, banner: '' })
+  })
+
+  it('the last-administrator rule names no field, so it is the banner', () => {
+    const r = mapAdminUserError({ status: 422, message: 'This is the last administrator: make another admin first' }, form)
+    expect(r.banner).toMatch(/last administrator/)
+    expect(r.fields).toEqual({})
+  })
+
+  it('anything else (403, network) is the banner, with a fallback text', () => {
+    expect(mapAdminUserError({ status: 403, message: 'Insufficient permissions' }, form).banner).toBe('Insufficient permissions')
+    expect(mapAdminUserError({ status: 0 }, form).banner).toMatch(/went wrong/)
   })
 })
