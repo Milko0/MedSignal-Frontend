@@ -28,6 +28,29 @@ describe('routes', () => {
     }
   })
 
+  it('protects the admin area for logged-in admins only, on a wide page, and every child inherits it', () => {
+    const match = makeRouter().resolve('/admin')
+    expect(match.meta).toMatchObject({ requiresAuth: true, requiresAdmin: true, wide: true })
+  })
+
+  it('has a page for every admin tab, each inheriting the admin guard and with a title', async () => {
+    const { ADMIN_SECTIONS } = await import('@/core/constants/admin')
+    const router = makeRouter()
+    expect(ADMIN_SECTIONS.length).toBe(6)
+    for (const { to } of ADMIN_SECTIONS) {
+      const match = router.resolve(to)
+      expect(match.name, to).toMatch(/^admin-/)
+      expect(match.meta, to).toMatchObject({ requiresAuth: true, requiresAdmin: true })
+      expect(match.meta.title, to).toBeTruthy()
+    }
+  })
+
+  it('sends /admin to the data updates page', async () => {
+    const router = makeRouter()
+    await router.push('/admin')
+    expect(router.currentRoute.value.name).toBe('admin-ingestion')
+  })
+
   it('sends the old /auth address to the login page and keeps its query', async () => {
     const router = makeRouter()
     await router.push('/auth?redirect=/profile')
