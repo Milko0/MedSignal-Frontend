@@ -23,6 +23,8 @@ export const routes = [
       { path: '', redirect: { name: 'admin-users' } },
       { path: 'users', name: 'admin-users', component: () => import('@/presentation/views/AdminUsersView.vue'), meta: { title: 'Admin: users' } },
       { path: 'shortages', name: 'admin-shortages', component: () => import('@/presentation/views/AdminShortagesView.vue'), meta: { title: 'Admin: shortages' } },
+      { path: 'reports', name: 'admin-reports', component: () => import('@/presentation/views/AdminReportsView.vue'), meta: { title: 'Admin: reports' } },
+      { path: 'labels', name: 'admin-labels', component: () => import('@/presentation/views/AdminLabelsView.vue'), meta: { title: 'Admin: labels' } },
     ] },
     // Must stay last: any other path shows the not-found page instead of an empty screen.
     { path: ':pathMatch(.*)*', name: 'not-found', component: () => import('@/presentation/views/NotFoundView.vue'), meta: { title: 'Page not found' } },

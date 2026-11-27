@@ -1,5 +1,6 @@
 // Pure rules of the admin screens (FR-19 to FR-27). No Vue, no HTTP.
 import { PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN, hasErrors } from '@/domain/rules/authValidation'
+import { formatDate } from '@/domain/rules/formatShortage'
 
 // The admin lists answer a plain array with no total, so "is there another page?" can only be guessed: a full page
 // means maybe, a short one means no. (An exact multiple of the page size shows one empty last page: acceptable.)
@@ -240,3 +241,39 @@ export const shortageRow = (d) => ({
   availability: d.availability,
   updated: d.update_date || d.initial_posting_date || null,
 })
+
+// ---- Reports (FR-22) and labels (FR-23): table rows and server errors ------------------------------------------------
+
+const count = (list) => (Array.isArray(list) ? list.length : 0)
+const seriousText = (serious) => (serious === true ? 'Serious' : serious === false ? 'Not serious' : 'Unknown')
+
+// One line of the reports table: display-ready text/numbers, nothing nested.
+export const reportRow = (d) => ({
+  id: d.report_id,
+  received: formatDate(d.receive_date) || '—',
+  quarter: d.quarter || '—',
+  serious: seriousText(d.seriousness?.serious),
+  drugs: count(d.drugs),
+  reactions: count(d.reactions),
+  country: d.country || '—',
+})
+
+// One line of the labels table.
+export const labelRow = (d) => ({
+  id: d.set_id,
+  version: d.version ?? 1,
+  type: d.product_type || '—',
+  effective: formatDate(d.effective_date) || '—',
+  boxed: d.has_boxed_warning ? 'Yes' : 'No',
+  ingredients: count(d.ingredient_rxcuis),
+})
+
+// The JSON dialogs have no form fields to hang messages on, so a 422 lists every field the server named
+// ("receive_date — Input should be a valid date"). Anything else is the error's own message.
+export function describeRecordError(error) {
+  const entries = Object.entries(error?.fieldErrors ?? {})
+  if (error?.status === 422 && entries.length) {
+    return `The server rejected the record: ${entries.map(([field, message]) => `${field} — ${message}`).join('; ')}`
+  }
+  return error?.message || 'Could not save the record. Please try again.'
+}
