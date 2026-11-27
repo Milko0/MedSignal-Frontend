@@ -277,3 +277,71 @@ export function describeRecordError(error) {
   }
   return error?.message || 'Could not save the record. Please try again.'
 }
+
+// ---- Ingestion and reconciliation (FR-19 to FR-21, FR-27) ---------------------------------------------------------
+const RUN_TYPES = {
+  FULL_LOAD: 'FAERS full load',
+  INCREMENTAL: 'Incremental update',
+  SHORTAGE_POLL: 'Shortage poll',
+  RECONCILIATION: 'Reconciliation',
+}
+export const runTypeLabel = (type) => RUN_TYPES[type] ?? type
+
+// A run with no end time is still going. One that ended with errors is shown as such even if it loaded records.
+// -> { state: 'running'|'errors'|'done', label, tone }
+export function runState(run) {
+  if (!run.endedAt) return { state: 'running', label: 'Running', tone: 'amber' }
+  if (run.errors?.length) return { state: 'errors', label: 'Finished with errors', tone: 'coral' }
+  return { state: 'done', label: 'Done', tone: 'green' }
+}
+export const isRunning = (runs) => Array.isArray(runs) && runs.some((r) => !r.endedAt)
+
+// "12 s", "3 min 05 s", "1 h 02 min"; '' when the start is unreadable. `now` is a parameter (running jobs keep counting).
+export function runDuration(run, now = new Date()) {
+  const start = new Date(run.startedAt).getTime()
+  const end = run.endedAt ? new Date(run.endedAt).getTime() : new Date(now).getTime()
+  if (Number.isNaN(start) || Number.isNaN(end)) return ''
+  const s = Math.max(0, Math.round((end - start) / 1000))
+  if (s < 60) return `${s} s`
+  if (s < 3600) return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`
+  return `${Math.floor(s / 3600)} h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')} min`
+}
+
+// The newest quarter among the ticked files that is NOT in the database yet: the one whose load would push old
+// quarters out of the rolling window, so it is what GET /ingestion/quarters?adding= is asked about. null = none.
+export function quarterToPreview(files, selectedNames) {
+  const quarters = files.filter((f) => selectedNames.includes(f.name) && f.quarter && !f.quarterLoaded).map((f) => f.quarter)
+  return quarters.length ? [...quarters].sort().at(-1) : null
+}
+
+// The "keep N quarters" box: empty = the server's default; otherwise a whole number from 1 to 20.
+// -> { ok: true, value: number|undefined } | { ok: false, error }
+export function parseWindow(text) {
+  const t = String(text ?? '').trim()
+  if (!t) return { ok: true, value: undefined }
+  if (!/^\d+$/.test(t) || Number(t) < 1 || Number(t) > 20) return { ok: false, error: 'Enter a whole number from 1 to 20, or leave it empty' }
+  return { ok: true, value: Number(t) }
+}
+
+// The two optional limits of the incremental update (since_days 1-365, label_limit 1-20000). Empty = the server's default.
+export function parseIncremental({ sinceDays, labelLimit }) {
+  const errors = {}
+  const read = (text, max, field, message) => {
+    const t = String(text ?? '').trim()
+    if (!t) return undefined
+    if (!/^\d+$/.test(t) || Number(t) < 1 || Number(t) > max) { errors[field] = message; return undefined }
+    return Number(t)
+  }
+  const days = read(sinceDays, 365, 'sinceDays', 'Enter a whole number of days from 1 to 365')
+  const limit = read(labelLimit, 20000, 'labelLimit', 'Enter a whole number from 1 to 20000')
+  return { errors, value: { sinceDays: days, labelLimit: limit } }
+}
+
+// The answer of POST /admin/reconciliation is an untyped dict: show each entry as "name: value".
+export function reconcileEntries(result) {
+  if (!result || typeof result !== 'object') return []
+  return Object.entries(result).map(([key, value]) => ({
+    key: key.replace(/_/g, ' '),
+    value: value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value),
+  }))
+}

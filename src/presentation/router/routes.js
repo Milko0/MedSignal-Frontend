@@ -18,9 +18,10 @@ export const routes = [
     { path: 'signals', name: 'signals', component: () => import('@/presentation/views/SignalsView.vue'), meta: { title: 'Signals & statistics' } },
     { path: 'my-medicines', name: 'cabinet', component: () => import('@/presentation/views/MedicineCabinetView.vue'), meta: { requiresAuth: true, title: 'My medicines' } },
     { path: 'profile', name: 'profile', component: () => import('@/presentation/views/ProfileView.vue'), meta: { requiresAuth: true, title: 'Profile and settings' } },
-    // Administration (FR-19 to FR-27). Child routes are added with their views; meta is inherited by every child.
+    // Administration (FR-19 to FR-27). Every child inherits this meta, so one guard covers the whole area.
     { path: 'admin', component: AdminLayout, meta: { requiresAuth: true, requiresAdmin: true, wide: true }, children: [
-      { path: '', redirect: { name: 'admin-users' } },
+      { path: '', redirect: { name: 'admin-ingestion' } },
+      { path: 'ingestion', name: 'admin-ingestion', component: () => import('@/presentation/views/AdminIngestionView.vue'), meta: { title: 'Admin: data updates' } },
       { path: 'users', name: 'admin-users', component: () => import('@/presentation/views/AdminUsersView.vue'), meta: { title: 'Admin: users' } },
       { path: 'shortages', name: 'admin-shortages', component: () => import('@/presentation/views/AdminShortagesView.vue'), meta: { title: 'Admin: shortages' } },
       { path: 'terms', name: 'admin-terms', component: () => import('@/presentation/views/AdminTermsView.vue'), meta: { title: 'Admin: excluded terms' } },
