@@ -4,6 +4,7 @@ export const ADMIN_SECTIONS = [
   { to: '/admin/reports', label: 'Reports' },
   { to: '/admin/labels', label: 'Labels' },
   { to: '/admin/shortages', label: 'Shortages' },
+  { to: '/admin/terms', label: 'Excluded terms' },
 ]
 
 export const ADMIN_PAGE_SIZE = 20

@@ -23,6 +23,7 @@ export const routes = [
       { path: '', redirect: { name: 'admin-users' } },
       { path: 'users', name: 'admin-users', component: () => import('@/presentation/views/AdminUsersView.vue'), meta: { title: 'Admin: users' } },
       { path: 'shortages', name: 'admin-shortages', component: () => import('@/presentation/views/AdminShortagesView.vue'), meta: { title: 'Admin: shortages' } },
+      { path: 'terms', name: 'admin-terms', component: () => import('@/presentation/views/AdminTermsView.vue'), meta: { title: 'Admin: excluded terms' } },
       { path: 'reports', name: 'admin-reports', component: () => import('@/presentation/views/AdminReportsView.vue'), meta: { title: 'Admin: reports' } },
       { path: 'labels', name: 'admin-labels', component: () => import('@/presentation/views/AdminLabelsView.vue'), meta: { title: 'Admin: labels' } },
     ] },

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { services } from '@/composition/container'
 import { useCabinetStore } from '@/application/stores/useCabinetStore'
 import { useProfileStore } from '@/application/stores/useProfileStore'
-import { resetAdminCrudStores } from '@/application/stores/useAdminCrudStore'
+import { resetAdminStores } from '@/application/stores/useAdminStores'
 import { FORM_401_PATHS } from '@/core/constants/auth'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
     hasToken.value = false
     useCabinetStore().reset()
     useProfileStore().reset()
-    resetAdminCrudStores()
+    resetAdminStores()
   }
 
   // Shown to the whole app after the profile page changed the user (new username or email).
