@@ -175,13 +175,6 @@ async function remove() {
 </template>
 
 <style scoped>
-.lookup { margin-bottom: var(--s-4); display: flex; flex-direction: column; gap: var(--s-1); }
-.lookup label { font-size: var(--fs-sm); font-weight: 500; color: var(--ink-2); }
-.lookup-row { display: flex; gap: var(--s-2); flex-wrap: wrap; }
-.lookup input { flex: 1; min-width: 12rem; max-width: 28rem; padding: .5rem .75rem; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-md); background: var(--card); color: var(--ink); }
-.lookup input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.lookup input[aria-invalid='true'] { border-color: var(--coral); }
-.error { color: var(--coral); font-size: var(--fs-sm); margin: 0; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn.danger { color: var(--coral); border-color: var(--coral); }
 .json { margin: 0; padding: var(--s-3); background: var(--slate-soft); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: var(--fs-sm); line-height: 1.45; overflow: auto; max-height: 60vh; white-space: pre-wrap; overflow-wrap: anywhere; }

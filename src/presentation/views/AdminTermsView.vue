@@ -1,6 +1,6 @@
 <script setup>
 // FR-26: reaction terms that are too vague to count (for example "drug ineffective"). They are left out of signals and
-// label gaps. The server normalises what is typed (trimmed, lower case), so the toast shows what was really stored.
+// label gaps. The server normalises what is typed (trimmed, upper case, single spaces: "P9 TEST TERM"), so the toast shows what was really stored.
 import { onMounted, ref, useId } from 'vue'
 import { useAdminTermsStore } from '@/application/stores/useAdminTermsStore'
 import { useUiStore } from '@/application/stores/useUiStore'

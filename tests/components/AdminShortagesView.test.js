@@ -146,4 +146,36 @@ describe('AdminShortagesView', () => {
     await click(footerButton('Delete record'))
     expect(dialog().querySelector('[role="alert"]').textContent).toContain('not found')
   })
+
+  describe('edit by package NDC', () => {
+    const submit = async (w, value) => {
+      await setValue(w.find('.lookup input').element, value)
+      await w.find('.lookup').trigger('submit')
+      await flushPromises()
+    }
+
+    it('opens the edit dialog for a record that is not on the page', async () => {
+      services.admin.shortages.get.mockResolvedValue({ ...A, package_ndc: '7777-0000-01' })
+      const w = await show()
+      expect(w.find('.lookup button').element.disabled).toBe(true)
+      await submit(w, ' 7777-0000-01 ')
+      expect(services.admin.shortages.get).toHaveBeenCalledWith('7777-0000-01')
+      expect(dialog().textContent).toContain('Edit 7777-0000-01')
+    })
+
+    it('says so when there is no such record', async () => {
+      services.admin.shortages.get.mockRejectedValue(apiError(404, 'not found'))
+      const w = await show()
+      await submit(w, '0000')
+      expect(w.find('.lookup [role="alert"]').text()).toBe('No shortage record with package NDC 0000.')
+      expect(dialog()).toBeNull()
+    })
+
+    it('shows any other failure as it is', async () => {
+      services.admin.shortages.get.mockRejectedValue(apiError(403, 'Insufficient permissions'))
+      const w = await show()
+      await submit(w, '0000')
+      expect(w.find('.lookup [role="alert"]').text()).toBe('Insufficient permissions')
+    })
+  })
 })

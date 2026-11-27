@@ -29,7 +29,7 @@ export const useAdminTermsStore = defineStore('adminTerms', () => {
     }
   }
 
-  // Resolves to the term as the server stored it (normalised: trimmed, lower case).
+  // Resolves to the term as the server stored it (normalised by the server: trimmed, upper case, single spaces).
   async function add(term) {
     const stored = await services.admin.terms.add(term)
     await load()

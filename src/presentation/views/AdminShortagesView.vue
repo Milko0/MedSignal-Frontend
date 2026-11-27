@@ -1,7 +1,7 @@
 <script setup>
 // FR-24: administrator CRUD on shortage records (the current FDA shortage list, one row per package NDC). Changes
 // refresh the cached shortage status on the server; the daily poll replaces the list with the FDA's again.
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useId } from 'vue'
 import { useAdminShortagesStore } from '@/application/stores/useAdminCrudStore'
 import { useUiStore } from '@/application/stores/useUiStore'
 import { shortageRow } from '@/domain/rules/admin'
@@ -13,15 +13,32 @@ import ShortageFormDialog from '@/presentation/components/admin/ShortageFormDial
 
 const store = useAdminShortagesStore()
 const ui = useUiStore()
+const uid = useId()
 
 const form = ref({ open: false, record: null, pending: false, error: null })
 const removal = ref({ open: false, record: null, pending: false, failure: '' })
+const lookup = ref({ ndc: '', pending: false, error: '' })
 
 onMounted(() => store.load(1))
 
 const openCreate = () => { form.value = { open: true, record: null, pending: false, error: null } }
 const openEdit = (record) => { form.value = { open: true, record, pending: false, error: null } }
 const closeForm = () => { if (!form.value.pending) form.value.open = false }
+
+// The list is ordered by package NDC and has no search, so a record far down is reached by its NDC.
+async function openByNdc() {
+  const ndc = lookup.value.ndc.trim()
+  if (!ndc || lookup.value.pending) return
+  lookup.value.pending = true
+  lookup.value.error = ''
+  try {
+    openEdit(await store.fetchOne(ndc))
+  } catch (e) {
+    lookup.value.error = e?.status === 404 ? `No shortage record with package NDC ${ndc}.` : e?.message || 'Could not open the record.'
+  } finally {
+    lookup.value.pending = false
+  }
+}
 
 async function save(body) {
   form.value.pending = true
@@ -65,6 +82,15 @@ async function remove() {
       </div>
       <button type="button" class="btn" @click="openCreate">New record</button>
     </div>
+
+    <form class="lookup card" novalidate @submit.prevent="openByNdc">
+      <label :for="`${uid}-ndc`">Edit by package NDC</label>
+      <div class="lookup-row">
+        <input :id="`${uid}-ndc`" v-model="lookup.ndc" autocomplete="off" :aria-invalid="!!lookup.error" @input="lookup.error = ''" />
+        <button class="btn outline" :disabled="!lookup.ndc.trim() || lookup.pending">{{ lookup.pending ? 'Opening…' : 'Open' }}</button>
+      </div>
+      <p v-if="lookup.error" class="error" role="alert">{{ lookup.error }}</p>
+    </form>
 
     <div class="card">
       <p v-if="store.error" class="admin-state error" role="alert">
