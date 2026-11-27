@@ -1,16 +1,17 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { services } from '@/composition/container'
-import { ADMIN_PAGE_SIZE, RUNS_POLL_MS, RUNS_WATCH_GRACE_MS } from '@/core/constants/admin'
+import { ADMIN_PAGE_SIZE, JOB_FINISHED_BY, RUNS_POLL_MS, RUNS_WATCH_MAX_MS } from '@/core/constants/admin'
 import { isRunning, quarterToPreview } from '@/domain/rules/admin'
 
 // Data updates (FR-19 to FR-21) and the live-layer rebuild (FR-27).
 //
-// The triggers answer 202 at once and the job runs in the background, so the only progress there is is the runs log:
-// an entry without an end time is a job still running. After a trigger the log is read every few seconds (RUNS_POLL_MS)
-// while a run is open, or for a short grace period (the entry may take a moment to appear), and stops by itself.
-// When a run closes, the files / loaded-quarters block is read again (a load changes both).
-// The trigger actions RETHROW (409 "already running", 422 "file not found") so the view can show the message.
+// The triggers answer 202 at once and the job runs in the background. The backend has no "status of the job" call, and
+// it writes a job's entry in the runs log only when the job FINISHES. So after a trigger (or a 409 "already running")
+// the store remembers `pending` = which job it waits for + the ids of the runs that existed, and reads the log every
+// few seconds until an entry of the matching type appears that was not there before (no clock comparison needed).
+// The files / loaded-quarters block is read again then, because a load changes both.
+// The trigger actions RETHROW (409, 422) so the view can show the message.
 export const useAdminIngestionStore = defineStore('adminIngestion', () => {
   // files and quarters
   const files = ref([])
@@ -35,9 +36,10 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
   let runsSeq = 0
   let previewSeq = 0
   let timer = null
-  let watchUntil = 0
 
-  const running = computed(() => isRunning(runs.value))
+  // { kind: 'faers'|'incremental', since: ms, known: [run ids seen when it was started] } while a job is awaited
+  const pending = ref(null)
+  const running = computed(() => !!pending.value || isRunning(runs.value))
   const runsHasNext = computed(() => runs.value.length >= ADMIN_PAGE_SIZE)
   const runsHasPrev = computed(() => runsPage.value > 1)
 
@@ -61,7 +63,7 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
 
   async function loadRuns(page = runsPage.value) {
     const mine = ++runsSeq
-    const wasRunning = running.value
+    const wasOpen = isRunning(runs.value)
     runsLoading.value = true
     runsError.value = ''
     try {
@@ -70,7 +72,8 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
       runs.value = rows
       runsPage.value = page
       runsLoaded.value = true
-      if (wasRunning && !isRunning(rows)) loadOverview()      // a job just finished: its files and quarters changed
+      if (wasOpen && !isRunning(rows)) loadOverview()         // a run that was open has closed: files and quarters changed
+      settlePending()
     } catch (e) {
       if (mine !== runsSeq) return
       runsError.value = e?.message || 'Could not read the update log.'
@@ -96,32 +99,43 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
     }
   }
 
+  // ---- waiting for a background job
+  // Called after every read of the log: has the awaited job left its entry, or has the wait gone on too long?
+  function settlePending() {
+    const p = pending.value
+    if (!p) return
+    const done = runs.value.some((r) => JOB_FINISHED_BY[p.kind].includes(r.type) && !p.known.includes(r.id))
+    if (done || Date.now() - p.since > RUNS_WATCH_MAX_MS) {
+      pending.value = null
+      if (done) loadOverview()
+    }
+  }
+
+  // The log is read first, so what is already in it is not mistaken for the end of the new job.
+  async function markRunning(kind) {
+    await loadRuns(1)
+    pending.value = { kind, since: Date.now(), known: runs.value.map((r) => r.id) }
+  }
+
   // ---- triggers
-  function watch() { watchUntil = Date.now() + RUNS_WATCH_GRACE_MS }
-
-  async function startFaers({ windowQuarters } = {}) {
+  async function trigger(kind, call) {
     starting.value = true
     try {
-      const started = await services.admin.ingestion.startFaers({ files: [...selected.value], windowQuarters })
-      watch()
-      await loadRuns(1)
+      const started = await call()
+      await markRunning(kind)
       return started
+    } catch (e) {
+      if (e?.status === 409) await markRunning(kind)      // somebody else's job (or an earlier one) is running: wait for it too
+      throw e
     } finally {
       starting.value = false
     }
   }
 
-  async function startIncremental(limits) {
-    starting.value = true
-    try {
-      const started = await services.admin.ingestion.startIncremental(limits)
-      watch()
-      await loadRuns(1)
-      return started
-    } finally {
-      starting.value = false
-    }
-  }
+  const startFaers = ({ windowQuarters } = {}) =>
+    trigger('faers', () => services.admin.ingestion.startFaers({ files: [...selected.value], windowQuarters }))
+
+  const startIncremental = (limits) => trigger('incremental', () => services.admin.ingestion.startIncremental(limits))
 
   async function reconcile() {
     reconciling.value = true
@@ -140,7 +154,8 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
     timer = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
       if (runsLoading.value) return
-      if (running.value || Date.now() < watchUntil) loadRuns()
+      if (pending.value) loadRuns(1)                           // the new entry lands on page 1
+      else if (isRunning(runs.value)) loadRuns()
     }, RUNS_POLL_MS)
   }
   function stopWatching() {
@@ -153,7 +168,7 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
     runsSeq++
     previewSeq++
     stopWatching()
-    watchUntil = 0
+    pending.value = null
     files.value = []
     quarters.value = null
     selected.value = []
@@ -172,7 +187,7 @@ export const useAdminIngestionStore = defineStore('adminIngestion', () => {
 
   return {
     files, quarters, overviewLoading, overviewError, selected, preview, runs, runsPage, runsLoading, runsError, runsLoaded,
-    runsHasNext, runsHasPrev, running, starting, reconciling, reconcileResult,
+    runsHasNext, runsHasPrev, running, pending, starting, reconciling, reconcileResult,
     loadOverview, loadRuns, nextRuns, prevRuns, select, startFaers, startIncremental, reconcile, startWatching, stopWatching, reset,
   }
 })

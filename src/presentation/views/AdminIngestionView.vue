@@ -7,6 +7,8 @@ import { useAdminIngestionStore } from '@/application/stores/useAdminIngestionSt
 import { useUiStore } from '@/application/stores/useUiStore'
 import { hasErrors } from '@/domain/rules/authValidation'
 import { parseIncremental, parseWindow, reconcileEntries } from '@/domain/rules/admin'
+import { JOB_NAMES } from '@/core/constants/admin'
+import { relativeTime } from '@/domain/rules/relativeTime'
 import ConfirmDialog from '@/presentation/components/admin/ConfirmDialog.vue'
 import FaersFilesTable from '@/presentation/components/admin/FaersFilesTable.vue'
 import RunsTable from '@/presentation/components/admin/RunsTable.vue'
@@ -24,7 +26,7 @@ const now = ref(new Date())
 const load = ref({ open: false, failure: '' })
 const rebuild = ref({ open: false, failure: '' })
 
-// A running job's clock moves whenever the log is read again.
+// A running job's clock (and "started … ago") moves whenever the log is read again.
 watch(() => store.runs, () => { now.value = new Date() })
 
 onMounted(() => {
@@ -114,7 +116,7 @@ async function runRebuild() {
                  :aria-invalid="!!windowError" @input="windowError = ''" />
           <p v-if="windowError" class="error" role="alert">{{ windowError }}</p>
         </div>
-        <button type="button" class="btn" :disabled="!store.selected.length || store.starting" @click="askLoad">
+        <button type="button" class="btn" :disabled="!store.selected.length || store.starting || store.pending?.kind === 'faers'" @click="askLoad">
           Load {{ store.selected.length || '' }} {{ store.selected.length === 1 ? 'file' : 'files' }}
         </button>
       </div>
@@ -137,16 +139,19 @@ async function runRebuild() {
           <input :id="`${uid}-limit`" v-model="limit" inputmode="numeric" autocomplete="off" placeholder="all new" :aria-invalid="!!incrementalErrors.labelLimit" />
           <p v-if="incrementalErrors.labelLimit" class="error" role="alert">{{ incrementalErrors.labelLimit }}</p>
         </div>
-        <button type="button" class="btn" :disabled="store.starting" @click="runIncremental">Run update now</button>
+        <button type="button" class="btn" :disabled="store.starting || store.pending?.kind === 'incremental'" @click="runIncremental">Run update now</button>
       </div>
     </div>
 
     <div class="card block">
       <div class="log-head">
         <h3>Update log</h3>
-        <span v-if="store.running" class="live" role="status">Running — refreshing every few seconds</span>
         <button type="button" class="btn outline" :disabled="store.runsLoading" @click="store.loadRuns()">Refresh</button>
       </div>
+      <p v-if="store.pending" class="live" role="status">
+        {{ JOB_NAMES[store.pending.kind] }} is running (started {{ relativeTime(new Date(store.pending.since).toISOString(), now) || 'just now' }}).
+        It appears in this log when it finishes; the log is checked every few seconds.
+      </p>
       <RunsTable :runs="store.runs" :loaded="store.runsLoaded" :loading="store.runsLoading" :error="store.runsError" :page="store.runsPage"
                  :has-prev="store.runsHasPrev" :has-next="store.runsHasNext" :now="now"
                  @prev="store.prevRuns()" @next="store.nextRuns()" @retry="store.loadRuns()" />
@@ -196,7 +201,7 @@ input[aria-invalid='true'] { border-color: var(--coral); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .log-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); }
 .log-head h3 { margin: 0; margin-right: auto; }
-.live { color: var(--amber); font-size: var(--fs-sm); }
+.live { margin: 0 0 var(--s-3); padding: var(--s-2) var(--s-3); background: var(--amber-soft); color: var(--amber); border-radius: var(--radius-sm); font-size: var(--fs-md); }
 .result { display: grid; grid-template-columns: auto 1fr; gap: var(--s-1) var(--s-4); margin: var(--s-3) 0 0; font-size: var(--fs-md); }
 .result dt { color: var(--ink-2); text-transform: capitalize; }
 .result dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }

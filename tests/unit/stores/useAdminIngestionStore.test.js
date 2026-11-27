@@ -7,7 +7,7 @@ vi.mock('@/composition/container', async () => ({
 
 const { services } = await import('@/composition/container')
 const { useAdminIngestionStore } = await import('@/application/stores/useAdminIngestionStore')
-const { RUNS_POLL_MS, RUNS_WATCH_GRACE_MS, ADMIN_PAGE_SIZE } = await import('@/core/constants/admin')
+const { RUNS_POLL_MS, RUNS_WATCH_MAX_MS, ADMIN_PAGE_SIZE } = await import('@/core/constants/admin')
 
 setupPinia()
 
@@ -165,24 +165,39 @@ describe('triggers', () => {
     expect(started.job).toBe('faers')
     expect(services.admin.ingestion.runs).toHaveBeenCalledWith({ skip: 0, limit: ADMIN_PAGE_SIZE })
     expect(store.starting).toBe(false)
+    expect(store.pending).toMatchObject({ kind: 'faers', known: ['r1'] })      // r1 was already in the log
+    expect(store.running).toBe(true)
   })
 
-  it('rethrows "already running" (409) and "file not found" (422), and is not left "starting"', async () => {
+  it('rethrows "already running" (409) but still waits for that job, and is not left "starting"', async () => {
     const store = useAdminIngestionStore()
     await store.loadOverview()
     await store.select(['q4.zip'])
     services.admin.ingestion.startFaers.mockRejectedValueOnce(failure(409, 'An ingestion job of this kind is already running'))
     await expect(store.startFaers()).rejects.toThrow('already running')
     expect(store.starting).toBe(false)
+    expect(store.pending).toMatchObject({ kind: 'faers' })
+    store.reset()
     services.admin.ingestion.startIncremental.mockRejectedValueOnce(failure(409, 'busy'))
     await expect(store.startIncremental({})).rejects.toThrow('busy')
+    expect(store.pending).toMatchObject({ kind: 'incremental' })
+  })
+
+  it('a refused file (422) is rethrown and nothing is awaited', async () => {
+    const store = useAdminIngestionStore()
+    await store.loadOverview()
+    await store.select(['q4.zip'])
+    services.admin.ingestion.startFaers.mockRejectedValueOnce(failure(422, 'q4.zip is not in data/faers'))
+    await expect(store.startFaers()).rejects.toThrow('not in data/faers')
+    expect(store.pending).toBeNull()
     expect(store.starting).toBe(false)
   })
 
-  it('startIncremental passes the limits through', async () => {
+  it('startIncremental passes the limits through and awaits the incremental job', async () => {
     const store = useAdminIngestionStore()
     await store.startIncremental({ sinceDays: 7, labelLimit: 100 })
     expect(services.admin.ingestion.startIncremental).toHaveBeenCalledWith({ sinceDays: 7, labelLimit: 100 })
+    expect(store.pending).toMatchObject({ kind: 'incremental' })
   })
 
   it('reconcile keeps the answer and refreshes the log; a refusal is rethrown', async () => {
@@ -196,8 +211,15 @@ describe('triggers', () => {
   })
 })
 
-describe('watching the log', () => {
-  it('does not read anything while nothing runs and nothing was started', async () => {
+describe('waiting for a background job', () => {
+  const start = async (store) => {
+    await store.loadRuns(1)                       // r1 is in the log before the trigger
+    await store.startIncremental({})
+    services.admin.ingestion.runs.mockClear()
+    store.startWatching()
+  }
+
+  it('reads nothing while no job is awaited and no run is open', async () => {
     const store = useAdminIngestionStore()
     await store.loadRuns(1)
     services.admin.ingestion.runs.mockClear()
@@ -207,44 +229,86 @@ describe('watching the log', () => {
     store.stopWatching()
   })
 
-  it('reads the log every tick while a run is open, and stops when it has closed', async () => {
+  it('reads page 1 every tick until a NEW entry of the matching type appears, then reads the files again', async () => {
+    const store = useAdminIngestionStore()
+    await start(store)
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 2)
+    expect(services.admin.ingestion.runs).toHaveBeenCalledTimes(2)
+    expect(services.admin.ingestion.runs).toHaveBeenLastCalledWith({ skip: 0, limit: ADMIN_PAGE_SIZE })
+    expect(store.pending).not.toBeNull()
+    expect(store.running).toBe(true)
+
+    services.admin.ingestion.faersFiles.mockClear()
+    services.admin.ingestion.runs.mockResolvedValue([run('r2'), run('r1')])            // the job's entry arrived
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    expect(store.pending).toBeNull()
+    expect(store.running).toBe(false)
+    expect(services.admin.ingestion.faersFiles).toHaveBeenCalledTimes(1)
+
+    services.admin.ingestion.runs.mockClear()
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 3)
+    expect(services.admin.ingestion.runs).not.toHaveBeenCalled()                       // stopped by itself
+    store.stopWatching()
+  })
+
+  it('an entry that was already in the log, or of another type, does not end the wait', async () => {
+    const store = useAdminIngestionStore()
+    await start(store)
+    services.admin.ingestion.runs.mockResolvedValue([run('r2', { type: 'SHORTAGE_POLL' }), run('r1')])   // the poll step logs first
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    expect(store.pending).toMatchObject({ kind: 'incremental' })
+    services.admin.ingestion.runs.mockResolvedValue([run('r3'), run('r2', { type: 'SHORTAGE_POLL' }), run('r1')])
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    expect(store.pending).toBeNull()
+    store.stopWatching()
+  })
+
+  it('a FAERS load is ended by a FULL_LOAD entry only', async () => {
+    const store = useAdminIngestionStore()
+    await store.loadOverview()
+    await store.select(['q4.zip'])
+    await store.loadRuns(1)
+    await store.startFaers({})
+    store.startWatching()
+    services.admin.ingestion.runs.mockResolvedValue([run('r2'), run('r1')])           // an INCREMENTAL entry: not this job
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    expect(store.pending).toMatchObject({ kind: 'faers' })
+    services.admin.ingestion.runs.mockResolvedValue([run('r3', { type: 'FULL_LOAD' }), run('r2'), run('r1')])
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    expect(store.pending).toBeNull()
+    store.stopWatching()
+  })
+
+  it('gives up after the maximum wait', async () => {
+    const store = useAdminIngestionStore()
+    await start(store)
+    await vi.advanceTimersByTimeAsync(RUNS_WATCH_MAX_MS + RUNS_POLL_MS * 2)
+    expect(store.pending).toBeNull()
+    services.admin.ingestion.runs.mockClear()
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 3)
+    expect(services.admin.ingestion.runs).not.toHaveBeenCalled()
+    store.stopWatching()
+  })
+
+  it('still reads an open run (an entry with no end time) until it closes', async () => {
     const store = useAdminIngestionStore()
     services.admin.ingestion.runs.mockResolvedValue([run('r1', { endedAt: null })])
     await store.loadRuns(1)
+    expect(store.running).toBe(true)
     services.admin.ingestion.runs.mockClear()
     store.startWatching()
-    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
-    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
+    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 2)
     expect(services.admin.ingestion.runs).toHaveBeenCalledTimes(2)
     services.admin.ingestion.runs.mockResolvedValue([run('r1')])
-    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)         // reads it closed
-    services.admin.ingestion.runs.mockClear()
-    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 3)
-    expect(services.admin.ingestion.runs).not.toHaveBeenCalled()
-    store.stopWatching()
-  })
-
-  it('after a trigger it keeps reading for the grace period even before a run shows up, then gives up', async () => {
-    const store = useAdminIngestionStore()
-    await store.startIncremental({})
-    store.startWatching()
-    services.admin.ingestion.runs.mockClear()
     await vi.advanceTimersByTimeAsync(RUNS_POLL_MS)
-    expect(services.admin.ingestion.runs).toHaveBeenCalledTimes(1)
-    await vi.advanceTimersByTimeAsync(RUNS_WATCH_GRACE_MS + RUNS_POLL_MS)
-    services.admin.ingestion.runs.mockClear()
-    await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 3)
-    expect(services.admin.ingestion.runs).not.toHaveBeenCalled()
+    expect(store.running).toBe(false)
     store.stopWatching()
   })
 
-  it('stopWatching ends the timer, and the tab being hidden pauses it', async () => {
+  it('a hidden tab pauses the reading, stopWatching ends it', async () => {
     const store = useAdminIngestionStore()
-    services.admin.ingestion.runs.mockResolvedValue([run('r1', { endedAt: null })])
-    await store.loadRuns(1)
-    services.admin.ingestion.runs.mockClear()
+    await start(store)
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
-    store.startWatching()
     await vi.advanceTimersByTimeAsync(RUNS_POLL_MS * 2)
     expect(services.admin.ingestion.runs).not.toHaveBeenCalled()
     visibility.mockReturnValue('visible')
@@ -257,12 +321,12 @@ describe('watching the log', () => {
     visibility.mockRestore()
   })
 
-  it('reset stops the timer and empties everything', async () => {
+  it('reset forgets the awaited job, stops the timer and empties everything', async () => {
     const store = useAdminIngestionStore()
     await store.loadOverview()
-    await store.loadRuns(1)
-    store.startWatching()
+    await start(store)
     store.reset()
+    expect(store.pending).toBeNull()
     expect(store.files).toEqual([])
     expect(store.runs).toEqual([])
     expect(store.quarters).toBeNull()

@@ -197,10 +197,34 @@ describe('update log', () => {
     expect(w.find('details').exists()).toBe(true)
   })
 
-  it('announces that it refreshes itself while a run is open', async () => {
-    services.admin.ingestion.runs.mockResolvedValue([run('r3', { endedAt: null })])
+  it('after a trigger it says the job is running, disables that button, and ends when its entry shows up', async () => {
     const w = await show()
-    expect(w.find('.live').text()).toContain('refreshing')
+    await click(buttonByText('Run update now'))
+    expect(w.find('.live').text()).toContain('is running')
+    expect(w.find('.live').text()).toContain('appears in this log when it finishes')
+    expect(buttonByText('Run update now').disabled).toBe(true)
+
+    services.admin.ingestion.runs.mockResolvedValue([run('r-new'), run('r1')])
+    await click(buttonByText('Refresh'))
+    expect(w.find('.live').exists()).toBe(false)
+    expect(buttonByText('Run update now').disabled).toBe(false)
+  })
+
+  it('a 409 also makes it wait for the job that is already running', async () => {
+    services.admin.ingestion.startIncremental.mockRejectedValue(apiError(409, 'busy'))
+    const w = await show()
+    await click(buttonByText('Run update now'))
+    expect(w.find('.live').text()).toContain('is running')
+  })
+
+  it('a running FAERS load disables the Load button until it is done', async () => {
+    const w = await show()
+    await tick(document.body.querySelector('input[aria-label="Load 2026q4-0001.json.zip"]'))
+    await click(buttonByText('Load'))
+    await click(footerButton('Start loading'))
+    expect(w.find('.live').text()).toContain('FAERS load is running')
+    await tick(document.body.querySelector('input[aria-label="Load 2026q4-0001.json.zip"]'))
+    expect(buttonByText('Load').disabled).toBe(true)
   })
 
   it('says so when nothing has run, and offers Retry on an error', async () => {
