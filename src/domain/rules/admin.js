@@ -287,11 +287,14 @@ const RUN_TYPES = {
 }
 export const runTypeLabel = (type) => RUN_TYPES[type] ?? type
 
-// A run with no end time is still going. One that ended with errors is shown as such even if it loaded records.
-// -> { state: 'running'|'errors'|'done', label, tone }
+// A run with no end time is still going. A job that crashed logs its error and loads nothing: failed. A job that
+// loaded data may still list a few source records it skipped (malformed openFDA entries): a normal outcome, shown with
+// the count. -> { state: 'running'|'failed'|'skipped'|'done', label, tone }
 export function runState(run) {
   if (!run.endedAt) return { state: 'running', label: 'Running', tone: 'amber' }
-  if (run.errors?.length) return { state: 'errors', label: 'Finished with errors', tone: 'coral' }
+  if (run.errors?.length && !run.recordsLoaded) return { state: 'failed', label: 'Failed', tone: 'coral' }
+  const skipped = run.recordsSkipped || run.errors?.length || 0
+  if (skipped) return { state: 'skipped', label: `Done, ${skipped} skipped`, tone: 'amber' }
   return { state: 'done', label: 'Done', tone: 'green' }
 }
 export const isRunning = (runs) => Array.isArray(runs) && runs.some((r) => !r.endedAt)

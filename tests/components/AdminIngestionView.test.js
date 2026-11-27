@@ -183,7 +183,7 @@ describe('update log', () => {
   it('lists runs with job name, state, duration and counters', async () => {
     services.admin.ingestion.runs.mockResolvedValue([
       run('r1'),
-      run('r2', { type: 'FULL_LOAD', errors: ['RxNav timeout'], stats: { files: 1 } }),
+      run('r2', { type: 'FULL_LOAD', errors: ['RxNav timeout'], recordsLoaded: 0, stats: { files: 1 } }),
       run('r3', { endedAt: null }),
     ])
     const w = await show()
@@ -191,7 +191,7 @@ describe('update log', () => {
     expect(text).toContain('Incremental update')
     expect(text).toContain('FAERS full load')
     expect(text).toContain('Done')
-    expect(text).toContain('Finished with errors')
+    expect(text).toContain('Failed')
     expect(text).toContain('Running')
     expect(text).toContain('42 s')
     expect(w.find('details').exists()).toBe(true)

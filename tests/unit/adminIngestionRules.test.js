@@ -10,9 +10,14 @@ describe('runState / isRunning', () => {
     expect(runState(run({ endedAt: null }))).toEqual({ state: 'running', label: 'Running', tone: 'amber' })
   })
 
-  it('a finished run is done, or finished with errors when it logged any', () => {
+  it('a finished run is done; failed when it logged errors and loaded nothing', () => {
     expect(runState(run())).toEqual({ state: 'done', label: 'Done', tone: 'green' })
-    expect(runState(run({ errors: ['RxNav timeout'] }))).toEqual({ state: 'errors', label: 'Finished with errors', tone: 'coral' })
+    expect(runState(run({ errors: ['RxNav timeout'] }))).toEqual({ state: 'failed', label: 'Failed', tone: 'coral' })
+  })
+
+  it('a run that loaded data and skipped a few bad source records is done, with the count', () => {
+    const r = run({ recordsLoaded: 1575, recordsSkipped: 2, errors: ["Unexpected NDC package shape: '76045-0212-10'", 'x'] })
+    expect(runState(r)).toEqual({ state: 'skipped', label: 'Done, 2 skipped', tone: 'amber' })
   })
 
   it('isRunning is true when any run is open', () => {
